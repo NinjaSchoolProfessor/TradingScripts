@@ -64,8 +64,9 @@ AssignPriceColor(
 );
 
 # Optional bubbles on flips
-AddChartBubble(Trend crosses above 0, low, "Flip Up", Color.GREEN, no);
-AddChartBubble(Trend crosses below 0, high, "Flip Down", Color.RED, yes);
+AddChartBubble(Trend crosses above 0, low, "▲", Color.GREEN, no);
+AddChartBubble(Trend crosses below 0, high, "▼", Color.RED, yes);
+
 ```
 
 ### SuperTrend Stock Hacker Scanner
