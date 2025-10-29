@@ -7,65 +7,52 @@ Scripts to improve insights on various trading platforms
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Modified using ChatGPT on 29-Oct-2025
 
-```
-# SuperTrend (ATR 21, Multiplier 1)
-# Mobius-style structure, cleaned up for TOS
-input AtrMult = 1.0;          # <- multiplier = 1
-input nATR    = 21;           # <- length = 21
-input PaintBars = yes;
+```# SuperTrend (No Bar or Line Coloring)
+# Based on Mobius version with no chart coloring, added label (top left of chart) and audio alerts to indicate change in trend direction
+# Added audio alerts for Up (Chimes) and Down (Bell)
+# Alternate sounds (Ring, Alarm) commented out for convenience
 
-# ATR using Wilder averaging, typical for SuperTrend
-def ATR = MovingAverage(AverageType.WILDERS, TrueRange(high, close, low), nATR);
+input AtrMult = 1.0;
+input nATR = 21;
+input AvgType = AverageType.HULL;
+input showBubbles = yes;
+input showLabel = yes;
 
-# Basic bands
-def UpperBand = HL2 + AtrMult * ATR;
-def LowerBand = HL2 - AtrMult * ATR;
+def ATR = MovingAverage(AvgType, TrueRange(high, close, low), nATR);
+def UP = HL2 + (AtrMult * ATR);
+def DN = HL2 - (AtrMult * ATR);
 
-# Final bands that "carry" until price invalidates them
-def PrevFinalUpper = CompoundValue(1, if IsNaN(PrevFinalUpper[1]) then UpperBand else PrevFinalUpper[1], UpperBand);
-def PrevFinalLower = CompoundValue(1, if IsNaN(PrevFinalLower[1]) then LowerBand else PrevFinalLower[1], LowerBand);
-
-def FinalUpper = CompoundValue(
-    1,
-    if UpperBand < PrevFinalUpper or close[1] > PrevFinalUpper
-    then UpperBand
-    else PrevFinalUpper,
-    UpperBand
-);
-
-def FinalLower = CompoundValue(
-    1,
-    if LowerBand > PrevFinalLower or close[1] < PrevFinalLower
-    then LowerBand
-    else PrevFinalLower,
-    LowerBand
-);
-
-# Trend direction and SuperTrend line
-def Trend = CompoundValue(
-    1,
-    if IsNaN(Trend[1]) then 1
-    else if Trend[1] == -1 and close > FinalUpper[1] then 1
-    else if Trend[1] ==  1 and close < FinalLower[1] then -1
-    else Trend[1],
-    1
-);
-
-def ST = if Trend == 1 then FinalLower else FinalUpper;
+rec ST = if IsNaN(ST[1]) then HL2 
+         else if close < ST[1] then UP 
+         else DN;
 
 plot SuperTrend = ST;
-SuperTrend.AssignValueColor(if Trend == 1 then Color.GREEN else Color.RED);
+SuperTrend.SetDefaultColor(Color.GRAY);
 SuperTrend.SetLineWeight(2);
 
-AssignPriceColor(
-    if PaintBars then
-        if Trend == 1 then Color.GREEN else Color.RED
-    else Color.CURRENT
-);
+# --- Trend Detection ---
+def isUp = close > ST;
+def isDown = close < ST;
+def crossUp = close crosses above ST;
+def crossDown = close crosses below ST;
 
-# Optional bubbles on flips
-AddChartBubble(Trend crosses above 0, low, "▲", Color.GREEN, no);
-AddChartBubble(Trend crosses below 0, high, "▼", Color.RED, yes);
+# --- Optional Bubbles ---
+AddChartBubble(showBubbles and crossUp, low, "Up", Color.GREEN, no);
+AddChartBubble(showBubbles and crossDown, high, "Down", Color.RED, yes);
+
+# --- Optional Label ---
+AddLabel(showLabel, 
+         "SuperTrend: " + if isUp then "Up" else "Down", 
+         if isUp then Color.GREEN else Color.RED);
+
+# --- Audio Alerts ---
+# Plays once per new trend change
+Alert(crossUp, "SuperTrend Flip: Up", Alert.ONCE, Sound.Chimes);
+Alert(crossDown, "SuperTrend Flip: Down", Alert.ONCE, Sound.Bell);
+
+# --- Alternate sounds you can use instead ---
+# Alert(crossUp, "SuperTrend Flip: Up", Alert.ONCE, Sound.Ring);
+# Alert(crossDown, "SuperTrend Flip: Down", Alert.ONCE, Sound.Alarm);
 
 ```
 
