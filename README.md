@@ -1,7 +1,7 @@
 # TradingScripts
 Scripts to improve insights on various trading platforms
 
-## Think or Swim ThinkScripts
+## ThinkOrSwim ThinkScripts
 
 ### SuperTrend Indicator
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
