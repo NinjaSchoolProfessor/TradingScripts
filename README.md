@@ -14,7 +14,7 @@ Scripts to improve insights on various trading platforms
 
 input AtrMult = 1.0;
 input nATR = 21;
-input AvgType = AverageType.HULL;
+input AvgType = AverageType.WILDERS;   # WILDERS is classic; try SIMPLE or HULL if you want it faster
 input showBubbles = yes;
 input showLabel = yes;
 
