@@ -5,6 +5,429 @@ Scripts to improve insights on various trading platforms
 
 ### Opening Range Breakout - ORB
 - Original Source: [https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/](https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/)
+```
+# TI Opening Range Breakout with Bull/Bear Zones + Label + Alerts + Scan
+# Time inputs are in Eastern Time
+
+#############################
+# USER INPUTS
+#############################
+
+input openingRangeStartTime = 0930;  #hint openingRangeStartTime: Start time of the opening range (e.g., 0930 for 9:30am ET).
+input openingRangeEndTime   = 0945;  #hint openingRangeEndTime: End time of the opening range (e.g., 0945 for 9:45am ET).
+
+input tradeEntryStartTime   = 1000;  #hint tradeEntryStartTime: Start time of the trade entry window where ORB breakouts are valid.
+input tradeEntryEndTime     = 1100;  #hint tradeEntryEndTime: End time of the trade entry window where ORB breakouts are valid.
+
+input sessionEndTime        = 1600;  #hint sessionEndTime: End of the regular session (e.g., 1600 for 4:00pm ET).
+
+input entryType = { default Wick_Touch, Close };
+#hint entryType: Choose how to define a breakout: Wick_Touch = high/low pierces the OR level; Close = candle close breaks the OR level.
+
+# Display toggles
+input showOpeningRangeBox   = yes;   #hint showOpeningRangeBox: Show the opening range high/low lines during the opening range.
+input showOpeningRangeCloud = no;    #hint showOpeningRangeCloud: Show a gray shaded cloud for the opening range box between the OR high and OR low.
+input showTradeEntryLines   = yes;   #hint showTradeEntryLines: Show dashed horizontal lines extending OR high/low through the trade entry window.
+input showBullBearZones     = yes;   #hint showBullBearZones: Master toggle to show or hide both Bull (green) and Bear (pink) OR zones.
+input showBullZone          = yes;   #hint showBullZone: Show the Bull Zone (midRange to OR high), typically the preferred long zone.
+input showBearZone          = yes;   #hint showBearZone: Show the Bear Zone (OR low to midRange), typically the preferred short zone.
+input showProfitTargetProjections = yes;
+#hint showProfitTargetProjections: Show profit-target projection lines. When enabled, you get two upside targets after a bullish breakout (HalfUp = midpoint between OR high and OR high + range, FullUp = OR range added above OR high ~1R) and two downside targets after a bearish breakout (HalfDown = midpoint between OR low and OR low - range, FullDown = OR range subtracted below OR low ~1R). These appear only if a breakout occurred, projections are enabled, and the breakout direction matches the projection.
+input showORBArrows         = yes;   #hint showORBArrows: Show ORB breakout markers (implemented as chart bubbles labeled "ORB Bull" / "ORB Bear").
+
+# Bull/Bear zone style: clouds only (behind price) or lines + clouds
+input bullBearZoneStyle = { default Clouds_Only, Lines_and_Clouds };
+#hint bullBearZoneStyle: Choose how to display Bull/Bear zones: Clouds_Only = shaded zones behind price only; Lines_and_Clouds = add boundary lines along with the shaded zones.
+
+# ORB bubble placement
+input orbBubblePosition = { default Standard, Above, Below };
+#hint orbBubblePosition: Choose where to place ORB bubbles. Standard = bull bubble below and bear bubble above the candle; Above = both bubbles above the candle; Below = both bubbles below the candle.
+
+# Label behavior: Off, reset daily, or persistent until next signal
+input labelMode = { default Daily_Reset, Persistent_Until_Next_Signal, Off };
+#hint labelMode: Controls the ORB label behavior. Daily_Reset = first ORB direction of the day and reset next day; Persistent_Until_Next_Signal = label stays until the next opposite ORB signal; Off = no ORB label.
+
+# Alerts
+input enableORBAlerts = yes;         #hint enableORBAlerts: Enable or disable audible alerts when a bullish or bearish ORB breakout first triggers.
+input orbAlertSound   = Sound.Ding;  #hint orbAlertSound: Sound to play when an ORB breakout alert fires.
+
+#############################
+# RANGE DEFINITIONS
+#############################
+
+# Opening range active between start and end
+def openingRange =
+    SecondsTillTime(openingRangeStartTime) <= 0 and
+    SecondsTillTime(openingRangeEndTime)   >= 0;
+
+# Trade entry window (time during which we look for the breakout)
+def tradeEntryRange =
+    SecondsTillTime(tradeEntryStartTime) <= 0 and
+    SecondsTillTime(tradeEntryEndTime)   >= 0;
+
+# Session active after opening range is locked in until sessionEndTime
+def sessionActive =
+    SecondsFromTime(openingRangeEndTime) >= 0 and
+    SecondsTillTime(sessionEndTime) >= 0;
+
+# Day boundaries for daily reset logic
+def day    = GetDay();
+def newDay = day <> day[1];
+
+#############################
+# OPENING RANGE HIGH / LOW
+#############################
+
+def openingRangeHigh =
+    if SecondsTillTime(openingRangeStartTime) == 0 then
+        high
+    else if openingRange and high > openingRangeHigh[1] then
+        high
+    else
+        openingRangeHigh[1];
+
+def openingRangeLow =
+    if SecondsTillTime(openingRangeStartTime) == 0 then
+        low
+    else if openingRange and low < openingRangeLow[1] then
+        low
+    else
+        openingRangeLow[1];
+
+#############################
+# PLOTS – OPENING RANGE BOX (LINES + OPTIONAL CLOUD)
+#############################
+
+plot HighCloud =
+    if showOpeningRangeBox and openingRange then openingRangeHigh else Double.NaN;
+plot LowCloud =
+    if showOpeningRangeBox and openingRange then openingRangeLow  else Double.NaN;
+
+HighCloud.SetDefaultColor(Color.GRAY);
+LowCloud.SetDefaultColor(Color.GRAY);
+
+# Separate series for the optional gray OR cloud
+def ORCloudLowSeries =
+    if showOpeningRangeCloud and showOpeningRangeBox and openingRange
+    then openingRangeLow
+    else Double.NaN;
+
+def ORCloudHighSeries =
+    if showOpeningRangeCloud and showOpeningRangeBox and openingRange
+    then openingRangeHigh
+    else Double.NaN;
+
+AddCloud(ORCloudLowSeries, ORCloudHighSeries, Color.GRAY, Color.GRAY);
+
+#############################
+# PLOTS – TRADE ENTRY EXTENSIONS
+#############################
+
+plot TradeEntryHighExtension =
+    if showTradeEntryLines and tradeEntryRange then openingRangeHigh else Double.NaN;
+plot TradeEntryLowExtension  =
+    if showTradeEntryLines and tradeEntryRange then openingRangeLow  else Double.NaN;
+
+TradeEntryHighExtension.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+TradeEntryLowExtension.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+
+TradeEntryHighExtension.SetStyle(Curve.SHORT_DASH);
+TradeEntryLowExtension.SetStyle(Curve.SHORT_DASH);
+
+TradeEntryHighExtension.SetDefaultColor(Color.GRAY);
+TradeEntryLowExtension.SetDefaultColor(Color.GRAY);
+
+#############################
+# ENTRY TYPE SWITCH
+#############################
+
+def bullEntryCondition;
+def bearEntryCondition;
+
+switch (entryType) {
+case Wick_Touch:
+    bullEntryCondition =
+        tradeEntryRange and
+        high > openingRangeHigh and
+        high[1] <= openingRangeHigh[1];
+
+    bearEntryCondition =
+        tradeEntryRange and
+        low < openingRangeLow and
+        low[1] >= openingRangeLow[1];
+
+case Close:
+    bullEntryCondition =
+        tradeEntryRange and
+        close > openingRangeHigh and
+        close[1] <= openingRangeHigh[1];
+
+    bearEntryCondition =
+        tradeEntryRange and
+        close < openingRangeLow and
+        close[1] >= openingRangeLow[1];
+}
+
+#############################
+# PERSISTENT ORB FLAGS (INTRA-DAY)
+#############################
+
+def bullishORB =
+    if bullEntryCondition then
+        1
+    else if !tradeEntryRange then
+        0
+    else
+        bullishORB[1];
+
+def bearishORB =
+    if bearEntryCondition then
+        1
+    else if !tradeEntryRange then
+        0
+    else
+        bearishORB[1];
+
+#############################
+# RANGE STATS AND MID RANGE
+#############################
+
+def range      = openingRangeHigh - openingRangeLow;
+def halfRange  = range / 2;
+def midRange   = openingRangeLow + halfRange;
+
+plot MidRangePlot =
+    if tradeEntryRange then midRange else Double.NaN;
+
+MidRangePlot.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+MidRangePlot.SetStyle(Curve.SHORT_DASH);
+MidRangePlot.SetDefaultColor(Color.LIGHT_GRAY);
+
+#############################
+# BULL / BEAR ZONES (CLOUDS + OPTIONAL LINES)
+#############################
+
+def bullZoneOn = showBullBearZones and showBullZone and sessionActive;
+def bearZoneOn = showBullBearZones and showBearZone and sessionActive;
+
+# Series used for clouds (always)
+def BullZoneBottomSeries =
+    if bullZoneOn then midRange else Double.NaN;
+def BullZoneTopSeries =
+    if bullZoneOn then openingRangeHigh else Double.NaN;
+
+def BearZoneBottomSeries =
+    if bearZoneOn then openingRangeLow else Double.NaN;
+def BearZoneTopSeries =
+    if bearZoneOn then midRange else Double.NaN;
+
+# Optional line plots (only visible when Lines_and_Clouds selected)
+plot BullZoneBottomLine;
+plot BullZoneTopLine;
+plot BearZoneBottomLine;
+plot BearZoneTopLine;
+
+switch (bullBearZoneStyle) {
+case Clouds_Only:
+    BullZoneBottomLine = Double.NaN;
+    BullZoneTopLine    = Double.NaN;
+    BearZoneBottomLine = Double.NaN;
+    BearZoneTopLine    = Double.NaN;
+case Lines_and_Clouds:
+    BullZoneBottomLine = BullZoneBottomSeries;
+    BullZoneTopLine    = BullZoneTopSeries;
+    BearZoneBottomLine = BearZoneBottomSeries;
+    BearZoneTopLine    = BearZoneTopSeries;
+}
+
+BullZoneBottomLine.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+BullZoneTopLine.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+BearZoneBottomLine.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+BearZoneTopLine.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+
+BullZoneBottomLine.SetDefaultColor(Color.LIGHT_GREEN);
+BullZoneTopLine.SetDefaultColor(Color.LIGHT_GREEN);
+BearZoneBottomLine.SetDefaultColor(Color.PINK);
+BearZoneTopLine.SetDefaultColor(Color.PINK);
+
+BullZoneBottomLine.HideTitle();
+BullZoneTopLine.HideTitle();
+BearZoneBottomLine.HideTitle();
+BearZoneTopLine.HideTitle();
+
+# Clouds (always drawn behind price)
+AddCloud(BullZoneBottomSeries, BullZoneTopSeries, Color.LIGHT_GREEN, Color.LIGHT_GREEN);
+AddCloud(BearZoneBottomSeries, BearZoneTopSeries, Color.PINK, Color.PINK);
+
+#############################
+# ENTRY MARKERS (RAW SIGNALS)
+#############################
+
+def bullSignalCond = bullishORB and !bullishORB[1];
+def bearSignalCond = bearishORB and !bearishORB[1];
+
+#############################
+# ORB BUBBLES ("ORB Bull" / "ORB Bear")
+#############################
+
+def bullBubbleAbove =
+    orbBubblePosition == orbBubblePosition.Above;
+
+def bearBubbleAbove =
+    orbBubblePosition == orbBubblePosition.Above
+    or orbBubblePosition == orbBubblePosition.Standard;
+
+AddChartBubble(
+    showORBArrows and bullSignalCond,
+    low,
+    "ORB Bull",
+    Color.WHITE,
+    bullBubbleAbove
+);
+
+AddChartBubble(
+    showORBArrows and bearSignalCond,
+    high,
+    "ORB Bear",
+    Color.WHITE,
+    bearBubbleAbove
+);
+
+#############################
+# PROFIT-TARGET PROJECTIONS (EXTENDED TO END OF DAY)
+#############################
+
+def halfwayUpsideProjection = openingRangeHigh + halfRange;
+def fullUpsideProjection    = openingRangeHigh + range;
+
+def halfwayDownsideProjection = openingRangeLow - halfRange;
+def fullDownsideProjection    = openingRangeLow - range;
+
+# Latch targets at breakout and hold for the rest of the day, reset at newDay
+def bullHalfTP =
+    if newDay then Double.NaN
+    else if bullSignalCond then halfwayUpsideProjection
+    else bullHalfTP[1];
+
+def bullFullTP =
+    if newDay then Double.NaN
+    else if bullSignalCond then fullUpsideProjection
+    else bullFullTP[1];
+
+def bearHalfTP =
+    if newDay then Double.NaN
+    else if bearSignalCond then halfwayDownsideProjection
+    else bearHalfTP[1];
+
+def bearFullTP =
+    if newDay then Double.NaN
+    else if bearSignalCond then fullDownsideProjection
+    else bearFullTP[1];
+
+# Plots: extend across the entire right side of the chart once set
+plot HalfUp =
+    if showProfitTargetProjections and !IsNaN(bullHalfTP)
+    then bullHalfTP
+    else Double.NaN;
+
+plot FullUp =
+    if showProfitTargetProjections and !IsNaN(bullFullTP)
+    then bullFullTP
+    else Double.NaN;
+
+HalfUp.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+FullUp.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+
+HalfUp.SetDefaultColor(Color.LIGHT_GREEN);
+FullUp.SetDefaultColor(Color.GREEN);
+FullUp.SetLineWeight(2);
+
+plot HalfDown =
+    if showProfitTargetProjections and !IsNaN(bearHalfTP)
+    then bearHalfTP
+    else Double.NaN;
+
+plot FullDown =
+    if showProfitTargetProjections and !IsNaN(bearFullTP)
+    then bearFullTP
+    else Double.NaN;
+
+HalfDown.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+FullDown.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+
+HalfDown.SetDefaultColor(Color.LIGHT_RED);
+FullDown.SetDefaultColor(Color.RED);
+FullDown.SetLineWeight(2);
+
+#############################
+# DAILY / PERSISTENT ORB STATE (FOR LABEL)
+#############################
+
+# Daily-reset state
+def orbStateDaily =
+    if newDay then 0
+    else if bullSignalCond then 1
+    else if bearSignalCond then -1
+    else orbStateDaily[1];
+
+# Persistent-until-next-signal state
+def orbStatePersistent =
+    if bullSignalCond then 1
+    else if bearSignalCond then -1
+    else orbStatePersistent[1];
+
+def useLabel = labelMode != labelMode.Off;
+
+def orbState =
+    if labelMode == labelMode.Daily_Reset then orbStateDaily
+    else if labelMode == labelMode.Persistent_Until_Next_Signal then orbStatePersistent
+    else 0;
+
+#############################
+# ORB LABEL
+#############################
+
+AddLabel(
+    useLabel and orbState != 0,
+    if orbState == 1
+    then "ORB bullish breakout"
+    else "ORB bearish breakout",
+    if orbState == 1
+    then Color.GREEN
+    else Color.RED
+);
+
+#############################
+# ORB ALERTS
+#############################
+
+Alert(
+    enableORBAlerts and bullSignalCond,
+    "ORB bullish breakout",
+    Alert.BAR,
+    orbAlertSound
+);
+
+Alert(
+    enableORBAlerts and bearSignalCond,
+    "ORB bearish breakout",
+    Alert.BAR,
+    orbAlertSound
+);
+
+#############################
+# SCAN-FRIENDLY PLOTS
+#############################
+# Use these in a Scan: plot == true
+
+plot BullORBScan = bullSignalCond;
+BullORBScan.HideTitle();
+BullORBScan.Hide();
+
+plot BearORBScan = bearSignalCond;
+BearORBScan.HideTitle();
+BearORBScan.Hide();
+```
 
 ### SuperTrend Indicator
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
