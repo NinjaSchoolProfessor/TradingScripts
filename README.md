@@ -3,6 +3,9 @@ Scripts to improve insights on various trading platforms
 
 ## ThinkOrSwim - ToS - ThinkScripts
 
+Formatting
+- [https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN](https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN)
+
 ### Opening Range Breakout - ORB
 - Original Source: [https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/](https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/)
 ```
