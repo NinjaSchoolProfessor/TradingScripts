@@ -6,6 +6,60 @@ Scripts to improve insights on various trading platforms
 Formatting
 - [https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN](https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN)
 
+### Trend Magic
+- Trend Magic is a trend-tracking line that uses the Commodity Channel Index (CCI) to determine the market’s directional state and the Average True Range (ATR) to set a dynamic band that acts as support or resistance. It turns bullish (blue) when the CCI value is above zero and bearish (red) when the CCI value is below zero.
+```
+declare upper;
+
+input CCIPeriod   = 20;
+input ATRPeriod   = 5;
+input ATRMult     = 1.0;
+input PriceSource = {default Close, Open, High, Low};
+
+# Select price source
+def src =
+if PriceSource == PriceSource.Close then close
+else if PriceSource == PriceSource.Open then open
+else if PriceSource == PriceSource.High then high
+else low;
+
+# ----- Manual CCI Calculation -----
+def tp   = src;
+def sma  = Average(tp, CCIPeriod);
+def mad  = Average(AbsValue(tp - sma), CCIPeriod);
+def cciVal = (tp - sma) / (0.015 * mad);
+
+# ----- ATR -----
+def tr  = TrueRange(high, close, low);
+def atr = Average(tr, ATRPeriod);
+
+# ----- Bands -----
+def upT   = low  - (atr * ATRMult);
+def downT = high + (atr * ATRMult);
+
+# ----- Trend Magic Recursive Line -----
+def MagicTrend =
+CompoundValue(
+    1,
+    if cciVal >= 0 then
+        if upT < MagicTrend[1]
+        then MagicTrend[1]
+        else upT
+    else
+        if downT > MagicTrend[1]
+        then MagicTrend[1]
+        else downT,
+    src
+);
+
+# ----- Plot -----
+plot TM = MagicTrend;
+TM.SetLineWeight(3);
+TM.AssignValueColor(
+    if cciVal >= 0 then Color.BLUE else Color.RED
+);
+```
+
 ### Opening Range Breakout - ORB
 - Original Source: [https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/](https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/)
 ```
