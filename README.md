@@ -7,6 +7,7 @@ Formatting
 - [https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN](https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN)
 
 ### Trend Magic
+- Trend Magic (CCI-based) avoids noise and defines the big picture. (pair with Super Trend)
 - Trend Magic is a trend-tracking line that uses the Commodity Channel Index (CCI) to determine the market’s directional state and the Average True Range (ATR) to set a dynamic band that acts as support or resistance. It turns bullish (blue) when the CCI value is above zero and bearish (red) when the CCI value is below zero.
 ```
 declare upper;
@@ -487,8 +488,10 @@ BearORBScan.Hide();
 ```
 
 ### SuperTrend Indicator
+ - SuperTrend (price-based) reacts to breakouts. (pair with Trend Magic)
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Modified using ChatGPT on 29-Oct-2025
+
 
 ```# SuperTrend (No Bar or Line Coloring)
 # Based on Mobius version with no chart coloring, added label (top left of chart) and audio alerts to indicate change in trend direction
