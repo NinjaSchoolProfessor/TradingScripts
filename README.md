@@ -68,11 +68,10 @@ TM.AssignValueColor(
 );
 ```
 
-### SuperTrend Indicator
+### SuperTrend
  - SuperTrend (price-based) reacts to breakouts. (pair with Trend Magic)
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Modified using ChatGPT on 29-Oct-2025
-
 
 ```# SuperTrend (No Bar or Line Coloring)
 # Based on Mobius version with no chart coloring, added label (top left of chart) and audio alerts to indicate change in trend direction
@@ -178,7 +177,8 @@ def ST_R = Round(ST / tickSize(), 0) * tickSize();
 plot SuperTrendFlipDown = if c crosses below ST_R then 1 else 0;
 ```
 
-### Opening Range Breakout (ORB)
+### Opening Range Breakout
+- Opening Range Breakout (ORB) is a trading strategy that identifies the high and low during the early part of a trading session. A breakout occurs when the price moves and closes above the initial high or below the initial low.
 - Original Source: [https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/](https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/)
 ```
 # TI Opening Range Breakout with Bull/Bear Zones + Label + Alerts + Scan
