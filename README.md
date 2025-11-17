@@ -8,8 +8,9 @@ Scripts to improve insights on various trading platforms
 2. [Super Trend](#super-trend)
 3. [Super Trend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
 4. [Opening Range Breakout (ORB)](#opening-range-breakout-(orb))
-5. [Think or Swim Formatting](#formatting)
+5. [Formatting](#formatting)
 
+---
 
 ## ThinkOrSwim - ToS - ThinkScripts
 
