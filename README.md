@@ -605,5 +605,5 @@ BearORBScan.HideTitle();
 BearORBScan.Hide();
 ```
 
-Formatting
+### Formatting
 - [https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN](https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN)
