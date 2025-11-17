@@ -7,7 +7,7 @@ Scripts to improve insights on various trading platforms
 1. [Trend Magic](#trend-magic)
 2. [Super Trend](#super-trend)
 3. [Super Trend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
-4. [Opening Range Breakout (ORB)](#opening-range-breakout-(orb))
+4. [Opening Range Breakout](#opening-range-breakout)
 5. [Formatting](#formatting)
 
 ---
@@ -69,12 +69,12 @@ TM.AssignValueColor(
 );
 ```
 
-### SuperTrend
- - SuperTrend (price-based) reacts to breakouts. (pair with Trend Magic)
+### Super Trend
+ - Super Trend (price-based) reacts to breakouts. (pair with Trend Magic)
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Modified using ChatGPT on 29-Oct-2025
 
-```# SuperTrend (No Bar or Line Coloring)
+```# Super Trend (No Bar or Line Coloring)
 # Based on Mobius version with no chart coloring, added label (top left of chart) and audio alerts to indicate change in trend direction
 # Added audio alerts for Up (Chimes) and Down (Bell)
 # Alternate sounds (Ring, Alarm) commented out for convenience
