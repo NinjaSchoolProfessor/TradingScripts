@@ -70,57 +70,104 @@ TM.AssignValueColor(
 ```
 
 ### Super Trend
- - Super Trend (price-based) reacts to breakouts. (pair with Trend Magic)
+ - Traditional SuperTrend algorithm using ATR-based dynamic support/resistance bands and provides an "UP" or "DOWN" bubble when  bullish (uptrend) and bearish (downtrend) conditions occur.
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
- - Modified using ChatGPT on 29-Oct-2025
+ - Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
 
-```# Super Trend (No Bar or Line Coloring)
-# Based on Mobius version with no chart coloring, added label (top left of chart) and audio alerts to indicate change in trend direction
-# Added audio alerts for Up (Chimes) and Down (Bell)
-# Alternate sounds (Ring, Alarm) commented out for convenience
+```
+# SuperTrend Indicator for ThinkOrSwim
+# 
+# Traditional SuperTrend algorithm using ATR-based dynamic support/resistance bands.
+# Tracks bullish (uptrend) and bearish (downtrend) conditions.
+#
+# FEATURES:
+# - Invisible plot line (calculation-only, no visual clutter)
+# - "UP" and "DOWN" bubbles at trend reversals
+# - Color-coded label showing current trend state
+# - Customizable audio alerts for trend changes
+# - Selectable ATR calculation method (WILDERS, SIMPLE, HULL, etc.)
+#
+# KEY INPUTS:
+# - length: ATR period (default 21)
+# - multiplier: ATR multiplier for band width (default 1.0)
+# - AvgType: Moving average type for ATR calculation
+# - soundUp/soundDown: Alert sounds (use Sound.NoSound to disable)
+# - alertType: ONCE (single play) or BAR (per bar while condition persists)
+#
+# USAGE:
+# Green = Bullish trend, Red = Bearish trend
+# Trend changes trigger bubbles and optional audio alerts
+#
+# Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
+# NinjaSchoolProfessor.com
+# https://github.com/NinjaSchoolProfessor/TradingScripts
 
-input AtrMult = 1.0;
-input nATR = 21;
-input AvgType = AverageType.WILDERS;   # WILDERS is classic; try SIMPLE or HULL if you want it faster
+
+declare upper;
+
+input length = 21;
+input multiplier = 1.0;
+input AvgType = AverageType.WILDERS;
 input showBubbles = yes;
 input showLabel = yes;
+input soundUp = Sound.Chimes;
+input soundDown = Sound.Bell;
+input alertType = {default "ONCE", "BAR"};
 
-def ATR = MovingAverage(AvgType, TrueRange(high, close, low), nATR);
-def UP = HL2 + (AtrMult * ATR);
-def DN = HL2 - (AtrMult * ATR);
+# Calculate ATR
+def ATR = MovingAverage(AvgType, TrueRange(high, close, low), length);
 
-rec ST = if IsNaN(ST[1]) then HL2 
-         else if close < ST[1] then UP 
-         else DN;
+# Calculate basic bands
+def upperBand = HL2 + (multiplier * ATR);
+def lowerBand = HL2 - (multiplier * ATR);
 
-plot SuperTrend = ST;
-SuperTrend.SetDefaultColor(Color.GRAY);
-SuperTrend.SetLineWeight(2);
+# Calculate final bands with persistence logic
+def finalUpperBand;
+def finalLowerBand;
 
-# --- Trend Detection ---
-def isUp = close > ST;
-def isDown = close < ST;
-def crossUp = close crosses above ST;
-def crossDown = close crosses below ST;
+finalUpperBand = if upperBand < finalUpperBand[1] or close[1] > finalUpperBand[1] 
+                 then upperBand 
+                 else finalUpperBand[1];
 
-# --- Optional Bubbles ---
-AddChartBubble(showBubbles and crossUp, low, "Up", Color.GREEN, no);
-AddChartBubble(showBubbles and crossDown, high, "Down", Color.RED, yes);
+finalLowerBand = if lowerBand > finalLowerBand[1] or close[1] < finalLowerBand[1] 
+                 then lowerBand 
+                 else finalLowerBand[1];
 
-# --- Optional Label ---
+# Determine trend direction
+def superTrend;
+def trend;
+
+trend = if close > finalUpperBand[1] then 1
+        else if close < finalLowerBand[1] then -1
+        else trend[1];
+
+superTrend = if trend == 1 then finalLowerBand else finalUpperBand;
+
+# Plot SuperTrend line (invisible)
+plot ST = superTrend;
+ST.SetDefaultColor(Color.CURRENT);
+ST.Hide();
+
+# Detect trend changes for bubbles
+def trendChange = trend != trend[1];
+def isBullish = trend == 1;
+
+# Add bubbles at trend changes
+AddChartBubble(showBubbles and trendChange and isBullish, low, "UP", Color.GREEN, no);
+AddChartBubble(showBubbles and trendChange and !isBullish, high, "DOWN", Color.RED, yes);
+
+# Add label
 AddLabel(showLabel, 
-         "SuperTrend: " + if isUp then "Up" else "Down", 
-         if isUp then Color.GREEN else Color.RED);
+         if isBullish then "SuperTrend: Up" else "SuperTrend: Down", 
+         if isBullish then Color.GREEN else Color.RED);
 
-# --- Audio Alerts ---
-# Plays once per new trend change
-Alert(crossUp, "SuperTrend Flip: Up", Alert.ONCE, Sound.Chimes);
-Alert(crossDown, "SuperTrend Flip: Down", Alert.ONCE, Sound.Bell);
-
-# --- Alternate sounds you can use instead ---
-# Alert(crossUp, "SuperTrend Flip: Up", Alert.ONCE, Sound.Ring);
-# Alert(crossDown, "SuperTrend Flip: Down", Alert.ONCE, Sound.Alarm);
-
+# Audio alerts
+# Note: TOS doesn't support repeating alerts a specific number of times
+# ONCE = plays once when trend changes
+# BAR = plays once per bar while condition persists (closest to repeating)
+def alertMode = if alertType == alertType."ONCE" then Alert.ONCE else Alert.BAR;
+Alert(trendChange and isBullish, "SuperTrend Flip: Up", alertMode, soundUp);
+Alert(trendChange and !isBullish, "SuperTrend Flip: Down", alertMode, soundDown);
 ```
 
 ### Super Trend Stock Hacker Scanner
