@@ -27,7 +27,7 @@ Scripts to improve insights on various trading platforms
 # - Toggle between standard ATR (Wilder's) or SMA-based ATR calculation
 # - Acts as dynamic support/resistance levels that adjust with volatility
 #
-# Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
+# Updated via Anthropic Claude 20-Nov-2025 @ 3:06 PM EDT
 # NinjaSchoolProfessor.com
 # https://github.com/NinjaSchoolProfessor/TradingScripts
 
