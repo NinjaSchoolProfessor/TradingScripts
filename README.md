@@ -105,16 +105,14 @@ TM.AssignValueColor(
 # - multiplier: ATR multiplier for band width (default 1.0)
 # - AvgType: Moving average type for ATR calculation
 # - soundUp/soundDown: Alert sounds (use Sound.NoSound to disable)
-# - alertType: ONCE (single play) or BAR (per bar while condition persists)
 #
 # USAGE:
 # Green = Bullish trend, Red = Bearish trend
 # Trend changes trigger bubbles and optional audio alerts
 #
-# Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
+# Updated via Anthropic Claude 20-Nov-2025 @ 3:14 PM EDT
 # NinjaSchoolProfessor.com
 # https://github.com/NinjaSchoolProfessor/TradingScripts
-
 
 declare upper;
 
@@ -125,7 +123,6 @@ input showBubbles = yes;
 input showLabel = yes;
 input soundUp = Sound.Chimes;
 input soundDown = Sound.Bell;
-input alertType = {default "ONCE", "BAR"};
 
 # Calculate ATR
 def ATR = MovingAverage(AvgType, TrueRange(high, close, low), length);
@@ -174,13 +171,9 @@ AddLabel(showLabel,
          if isBullish then "SuperTrend: Up" else "SuperTrend: Down", 
          if isBullish then Color.GREEN else Color.RED);
 
-# Audio alerts
-# Note: TOS doesn't support repeating alerts a specific number of times
-# ONCE = plays once when trend changes
-# BAR = plays once per bar while condition persists (closest to repeating)
-def alertMode = if alertType == alertType."ONCE" then Alert.ONCE else Alert.BAR;
-Alert(trendChange and isBullish, "SuperTrend Flip: Up", alertMode, soundUp);
-Alert(trendChange and !isBullish, "SuperTrend Flip: Down", alertMode, soundDown);
+# Audio alerts - plays once when trend changes
+Alert(trendChange and isBullish, "SuperTrend Flip: Up", Alert.ONCE, soundUp);
+Alert(trendChange and !isBullish, "SuperTrend Flip: Down", Alert.ONCE, soundDown);
 ```
 
 ### SuperTrend Stock Hacker Scanner
