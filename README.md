@@ -6,9 +6,9 @@ Scripts to improve insights on various trading platforms
 
 1. [Trend Magic](#trend-magic)
 2. [SuperTrend](#supertrend)
-3. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
-4. [Opening Range Breakout](#opening-range-breakout)
-5. [Formatting](#formatting)
+3. [Opening Range Breakout](#opening-range-breakout)
+4. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
+6. [Formatting](#formatting)
 
 ---
 
@@ -174,61 +174,6 @@ AddLabel(showLabel,
 # Audio alerts - plays once when trend changes
 Alert(trendChange and isBullish, "SuperTrend Flip: Up", Alert.ONCE, soundUp);
 Alert(trendChange and !isBullish, "SuperTrend Flip: Down", Alert.ONCE, soundDown);
-```
-
-### SuperTrend Stock Hacker Scanner
- - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
- - Modified using ChatGPT on 29-Oct-2025
-
-```
-# SuperTrend Scan (ATR 21, Multiplier 1)
-# Based on Mobius logic, adapted for scanning
-input AtrMult = 1.0;     # multiplier = 1
-input nATR    = 21;      # ATR length = 21
-
-def h = high;
-def l = low;
-def c = close;
-
-# Wilder ATR
-def ATR = MovingAverage(AverageType.WILDERS, TrueRange(h, c, l), nATR);
-
-# Raw bands
-def UpperBand = HL2 + AtrMult * ATR;
-def LowerBand = HL2 - AtrMult * ATR;
-
-# Final bands that carry until invalidated
-def FUp = CompoundValue(
-    1,
-    if UpperBand < FUp[1] or c[1] > FUp[1] then UpperBand else FUp[1],
-    UpperBand
-);
-
-def FLo = CompoundValue(
-    1,
-    if LowerBand > FLo[1] or c[1] < FLo[1] then LowerBand else FLo[1],
-    LowerBand
-);
-
-# Trend state
-def Trend = CompoundValue(
-    1,
-    if IsNaN(Trend[1]) then 1
-    else if Trend[1] == -1 and c > FUp[1] then 1
-    else if Trend[1] ==  1 and c < FLo[1] then -1
-    else Trend[1],
-    1
-);
-
-# SuperTrend line
-def ST = if Trend == 1 then FLo else FUp;
-
-# Round for scan stability
-def ST_R = Round(ST / tickSize(), 0) * tickSize();
-
-# Choose one direction for the scan
-# plot SuperTrendFlipUp   = if c crosses above ST_R then 1 else 0;
-plot SuperTrendFlipDown = if c crosses below ST_R then 1 else 0;
 ```
 
 ### Opening Range Breakout
@@ -659,6 +604,61 @@ alert(BullishBreakoutCondition, "ORB Bullish Breakout", Alert.Bar, Sound.Bell);
 alert(BearishBreakoutCondition, "ORB Bearish Breakout", Alert.Bar, Sound.Ring);
 
 # End of Opening Range Breakout Indicator
+```
+
+### SuperTrend Stock Hacker Scanner
+ - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
+ - Modified using ChatGPT on 29-Oct-2025
+
+```
+# SuperTrend Scan (ATR 21, Multiplier 1)
+# Based on Mobius logic, adapted for scanning
+input AtrMult = 1.0;     # multiplier = 1
+input nATR    = 21;      # ATR length = 21
+
+def h = high;
+def l = low;
+def c = close;
+
+# Wilder ATR
+def ATR = MovingAverage(AverageType.WILDERS, TrueRange(h, c, l), nATR);
+
+# Raw bands
+def UpperBand = HL2 + AtrMult * ATR;
+def LowerBand = HL2 - AtrMult * ATR;
+
+# Final bands that carry until invalidated
+def FUp = CompoundValue(
+    1,
+    if UpperBand < FUp[1] or c[1] > FUp[1] then UpperBand else FUp[1],
+    UpperBand
+);
+
+def FLo = CompoundValue(
+    1,
+    if LowerBand > FLo[1] or c[1] < FLo[1] then LowerBand else FLo[1],
+    LowerBand
+);
+
+# Trend state
+def Trend = CompoundValue(
+    1,
+    if IsNaN(Trend[1]) then 1
+    else if Trend[1] == -1 and c > FUp[1] then 1
+    else if Trend[1] ==  1 and c < FLo[1] then -1
+    else Trend[1],
+    1
+);
+
+# SuperTrend line
+def ST = if Trend == 1 then FLo else FUp;
+
+# Round for scan stability
+def ST_R = Round(ST / tickSize(), 0) * tickSize();
+
+# Choose one direction for the scan
+# plot SuperTrendFlipUp   = if c crosses above ST_R then 1 else 0;
+plot SuperTrendFlipDown = if c crosses below ST_R then 1 else 0;
 ```
 
 ### Formatting
