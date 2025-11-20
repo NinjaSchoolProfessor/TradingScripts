@@ -18,6 +18,19 @@ Scripts to improve insights on various trading platforms
 - Trend Magic (CCI-based) avoids noise and defines the big picture. (pair with Super Trend)
 - Trend Magic is a trend-tracking line that uses the Commodity Channel Index (CCI) to determine the market’s directional state and the Average True Range (ATR) to set a dynamic band that acts as support or resistance. It turns bullish (blue) when the CCI value is above zero and bearish (red) when the CCI value is below zero.
 ```
+# Trend Magic Indicator - Uses CCI to determine trend direction and ATR-based trailing stops
+# Features:
+# - Adaptive trailing stop that follows price based on CCI momentum
+# - Blue line when CCI >= 0 (bullish), Red line when CCI < 0 (bearish)
+# - Customizable CCI period, ATR multiplier, and ATR period
+# - Multiple price source options (Close, Open, High, Low, HL2, HLC3, OHLC4)
+# - Toggle between standard ATR (Wilder's) or SMA-based ATR calculation
+# - Acts as dynamic support/resistance levels that adjust with volatility
+#
+# Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
+# NinjaSchoolProfessor.com
+# https://github.com/NinjaSchoolProfessor/TradingScripts
+
 declare upper;
 
 input CCIPeriod   = 20;
