@@ -5,8 +5,8 @@ Scripts to improve insights on various trading platforms
 ## Table of contents
 
 1. [Trend Magic](#trend-magic)
-2. [Super Trend](#super-trend)
-3. [Super Trend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
+2. [SuperTrend](#supertrend)
+3. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
 4. [Opening Range Breakout](#opening-range-breakout)
 5. [Formatting](#formatting)
 
@@ -82,7 +82,7 @@ TM.AssignValueColor(
 );
 ```
 
-### Super Trend
+### SuperTrend
  - Traditional SuperTrend algorithm using ATR-based dynamic support/resistance bands and provides an "UP" or "DOWN" bubble when  bullish (uptrend) and bearish (downtrend) conditions occur.
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
