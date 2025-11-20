@@ -183,7 +183,7 @@ Alert(trendChange and isBullish, "SuperTrend Flip: Up", alertMode, soundUp);
 Alert(trendChange and !isBullish, "SuperTrend Flip: Down", alertMode, soundDown);
 ```
 
-### Super Trend Stock Hacker Scanner
+### SuperTrend Stock Hacker Scanner
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Modified using ChatGPT on 29-Oct-2025
 
