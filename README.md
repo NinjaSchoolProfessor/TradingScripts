@@ -27,7 +27,8 @@ Scripts to improve insights on various trading platforms
 # - Toggle between standard ATR (Wilder's) or SMA-based ATR calculation
 # - Acts as dynamic support/resistance levels that adjust with volatility
 #
-# Updated via Anthropic Claude 20-Nov-2025 @ 3:06 PM EDT
+# Updated via Anthropic Claude 20-Nov-2025 @ 6:45 PM EDT
+#
 # NinjaSchoolProfessor.com
 # https://github.com/NinjaSchoolProfessor/TradingScripts
 
@@ -80,6 +81,17 @@ TM.SetLineWeight(3);
 TM.AssignValueColor(
     if cciVal >= 0 then Color.BLUE else Color.RED
 );
+
+# ----- Label (green for bullish, red for bearish) -----
+AddLabel(
+    yes,
+    if cciVal >= 0
+    then "Magic Trend: Bullish"
+    else "Magic Trend: Bearish",
+    if cciVal >= 0
+    then Color.GREEN
+    else Color.RED
+);
 ```
 
 ### SuperTrend
@@ -111,6 +123,7 @@ TM.AssignValueColor(
 # Trend changes trigger bubbles and optional audio alerts
 #
 # Updated via Anthropic Claude 20-Nov-2025 @ 3:14 PM EDT
+#
 # NinjaSchoolProfessor.com
 # https://github.com/NinjaSchoolProfessor/TradingScripts
 
