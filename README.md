@@ -95,7 +95,7 @@ AddLabel(
 ```
 
 ### SuperTrend
- - Traditional SuperTrend algorithm using ATR-based dynamic support/resistance bands and provides an "UP" or "DOWN" bubble when  bullish (uptrend) and bearish (downtrend) conditions occur.
+ - SuperTrend uses the Average True Range (ATR) to build adaptive support and resistance levels and signals an up or down trend by showing an “UP” or “DOWN” bubble when the market shifts into bullish or bearish conditions.
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
  - Updated via Anthropic Claude 20-Nov-2025 @ 2:45 PM EDT
 
