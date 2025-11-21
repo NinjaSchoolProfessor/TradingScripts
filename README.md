@@ -113,7 +113,7 @@ AddLabel(
 # - Selectable ATR calculation method (WILDERS, SIMPLE, HULL, etc.)
 #
 # KEY INPUTS:
-# - length: ATR period (default 21)
+# - length: ATR period (default 14)
 # - multiplier: ATR multiplier for band width (default 1.0)
 # - AvgType: Moving average type for ATR calculation
 # - soundUp/soundDown: Alert sounds (use Sound.NoSound to disable)
@@ -129,8 +129,8 @@ AddLabel(
 
 declare upper;
 
-input length = 21;
-input multiplier = 1.0;
+input length = 14;
+input multiplier = 2.0;
 input AvgType = AverageType.WILDERS;
 input showBubbles = yes;
 input showLabel = yes;
