@@ -316,24 +316,28 @@ AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 
 # Inputs
 input length = 14;
-input rsiThreshold = 50;
+input upperThreshold = 70;
+input lowerThreshold = 30;
 input showLabel = yes;
 
 # Calculate RSI
 def rsi = RSI(length = length);
 
-# Determine if RSI is above threshold
-def rsiAboveThreshold = rsi > rsiThreshold;
+# Determine RSI condition
+def rsiOverbought = rsi > upperThreshold;
+def rsiOversold = rsi < lowerThreshold;
 
 # Add Label
 AddLabel(
     showLabel,
-    if rsiAboveThreshold
-    then "RSI: > " + rsiThreshold
-    else "RSI: < " + rsiThreshold,
-    if rsiAboveThreshold
-    then Color.GREEN
-    else Color.RED
+    if rsiOverbought
+    then "RSI: Overbought"
+    else if rsiOversold
+    then "RSI: Oversold"
+    else "RSI: Neutral",
+    if rsiOverbought or rsiOversold
+    then Color.ORANGE
+    else Color.GRAY
 );
 ```
 ### Opening Range Breakout
