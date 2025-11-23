@@ -1,4 +1,4 @@
-# TradingScripts
+	# TradingScripts
 Scripts to improve insights on various trading platforms
 
 ---
@@ -213,12 +213,25 @@ declare upper;
 declare once_per_bar;
 
 input priceSource = {default TYPICAL, CLOSE, HL2, HLC3, OHLC4};
+#hint priceSource: Price calculation method. TYPICAL (default) = (High + Low + Close) / 3, most common for VWAP. CLOSE = closing price only. HL2 = (High + Low) / 2. HLC3 = (High + Low + Close) / 3. OHLC4 = (Open + High + Low + Close) / 4.
+
 input timeFrame = AggregationPeriod.DAY;
+#hint timeFrame: Time period for VWAP reset. DAY (default) resets at 9:30 AM ET for regular session. Other options: WEEK, MONTH, YEAR for longer-term VWAP calculations.
+
 input showStdDevBands = yes;
+#hint showStdDevBands: Display standard deviation bands around VWAP. Yes (default) shows 1σ, 2σ, and 3σ bands that act as dynamic support/resistance levels. No hides all bands.
+
 input numStdDev1 = 1.0;
+#hint numStdDev1: First standard deviation multiplier. Default = 1.0. Represents approximately 68% of price action. Commonly used for mean reversion entry/exit points.
+
 input numStdDev2 = 2.0;
+#hint numStdDev2: Second standard deviation multiplier. Default = 2.0. Represents approximately 95% of price action. Used for extended moves and potential reversals.
+
 input numStdDev3 = 3.0;
+#hint numStdDev3: Third standard deviation multiplier. Default = 3.0. Represents approximately 99.7% of price action. Indicates extreme deviations from VWAP.
+
 input showLabel = yes;
+#hint showLabel: Display status label in upper right corner showing "VWAP: Bullish" (green) when price is above VWAP or "VWAP: Bearish" (red) when price is below VWAP. Yes (default) shows label, No hides it.
 
 # Define price based on user selection
 def price;
@@ -316,9 +329,16 @@ AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 
 # Inputs
 input length = 14;
+#hint length: "Number of periods for RSI calculation. Default is 14, which is the standard RSI lookback period.";
+
 input upperThreshold = 70;
+#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 70.";
+
 input lowerThreshold = 30;
+#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 30.";
+
 input showLabel = yes;
+#hint showLabel: "Toggle to show or hide the RSI label on the chart.";
 
 # Calculate RSI
 def rsi = RSI(length = length);
