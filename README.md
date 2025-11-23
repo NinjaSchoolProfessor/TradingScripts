@@ -235,8 +235,12 @@ switch (priceSource) {
         price = (high + low + close) / 3;
 }
 
-# Check if we're at the start of a new time period
-def isNewPeriod = GetDay() != GetDay()[1];
+# Check if we're at the start of a new time period (9:30 AM ET market open)
+def isNewPeriod = if SecondsFromTime(0930) == 0 
+                  then yes 
+                  else if GetDay() != GetDay()[1] and SecondsFromTime(0930) >= 0
+                  then yes
+                  else no;
 
 # Cumulative calculations that reset each period
 def cumVolume = if isNewPeriod then volume else cumVolume[1] + volume;
