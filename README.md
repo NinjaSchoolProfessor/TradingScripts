@@ -331,11 +331,11 @@ AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 input length = 14;
 #hint length: "Number of periods for RSI calculation. Default is 14, which is the standard RSI lookback period.";
 
-input upperThreshold = 70;
-#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 70.";
+input upperThreshold = 80;
+#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 80.";
 
-input lowerThreshold = 30;
-#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 30.";
+input lowerThreshold = 20;
+#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 20.";
 
 input showLabel = yes;
 #hint showLabel: "Toggle to show or hide the RSI label on the chart.";
