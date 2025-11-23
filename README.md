@@ -7,9 +7,10 @@ Scripts to improve insights on various trading platforms
 1. [Trend Magic](#trend-magic)
 2. [SuperTrend](#supertrend)
 3. [VWAP](#vwap)
-4. [Opening Range Breakout](#opening-range-breakout)
-5. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
-6. [Formatting](#formatting)
+4. [RSI](#rsi)
+5. [Opening Range Breakout](#opening-range-breakout)
+6. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
+7. [Formatting](#formatting)
 
 ---
 
@@ -304,6 +305,33 @@ def showBubble = isNewPeriod and !IsNaN(close);
 AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 ```
 
+### RSI
+- Standard relative strength index (RSI) that includes a label that turns green/red as RSI moves above a given threshold.
+```
+# RSI Label Indicator
+
+# Inputs
+input length = 14;
+input rsiThreshold = 50;
+input showLabel = yes;
+
+# Calculate RSI
+def rsi = RSI(length = length);
+
+# Determine if RSI is above threshold
+def rsiAboveThreshold = rsi > rsiThreshold;
+
+# Add Label
+AddLabel(
+    showLabel,
+    if rsiAboveThreshold
+    then "RSI: > " + rsiThreshold
+    else "RSI: < " + rsiThreshold,
+    if rsiAboveThreshold
+    then Color.GREEN
+    else Color.RED
+);
+```
 ### Opening Range Breakout
 ## This study is currently a work in progress -- DO NOT USE YET --
 - This script identifies and tracks Opening Range Breakouts (ORB) for intraday trading. It measures the high and low during a user-defined opening period, typically the first 15 minutes, then visualizes that range on the chart. The script flags breakouts when price moves and closes above the opening high for a potential bullish setup or below the opening low for a potential bearish setup. When a breakout occurs, it also calculates ATR-based profit targets to help with trade planning. The previous day’s close is displayed for added context, and a real-time status label shows the current ORB direction.
