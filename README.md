@@ -6,8 +6,9 @@ Scripts to improve insights on various trading platforms
 
 1. [Trend Magic](#trend-magic)
 2. [SuperTrend](#supertrend)
-3. [Opening Range Breakout](#opening-range-breakout)
-4. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
+3. [VWAP](#vwap)
+4. [Opening Range Breakout](#opening-range-breakout)
+5. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
 6. [Formatting](#formatting)
 
 ---
@@ -187,6 +188,120 @@ AddLabel(showLabel,
 # Audio alerts - plays once when trend changes
 Alert(trendChange and isBullish, "SuperTrend Flip: Up", Alert.ONCE, soundUp);
 Alert(trendChange and !isBullish, "SuperTrend Flip: Down", Alert.ONCE, soundDown);
+```
+
+### VWAP
+- Standard VWAP with a label that turns green or red depending on the position of price action.
+```
+# Volume-Weighted Average Price (VWAP) Indicator
+# Calculates the average price weighted by volume, resetting daily
+# Features:
+# - Customizable price source (Typical Price, Close, HL2, HLC3, OHLC4)
+# - Optional standard deviation bands (1σ, 2σ, 3σ)
+# - Daily reset at market open
+# - Color-coded based on price position relative to VWAP
+# - Summary label showing current relationship
+#
+# VWAP is commonly used by institutional traders as a benchmark for execution quality
+# Price above VWAP = Bullish, Price below VWAP = Bearish
+#
+# Created via Anthropic Claude 23-Nov-2025
+# NinjaSchoolProfessor.com
+
+declare upper;
+declare once_per_bar;
+
+input priceSource = {default TYPICAL, CLOSE, HL2, HLC3, OHLC4};
+input timeFrame = AggregationPeriod.DAY;
+input showStdDevBands = yes;
+input numStdDev1 = 1.0;
+input numStdDev2 = 2.0;
+input numStdDev3 = 3.0;
+input showLabel = yes;
+
+# Define price based on user selection
+def price;
+switch (priceSource) {
+    case CLOSE:
+        price = close;
+    case HL2:
+        price = (high + low) / 2;
+    case HLC3:
+        price = (high + low + close) / 3;
+    case OHLC4:
+        price = (open + high + low + close) / 4;
+    default:  # TYPICAL
+        price = (high + low + close) / 3;
+}
+
+# Check if we're at the start of a new time period
+def isNewPeriod = GetDay() != GetDay()[1];
+
+# Cumulative calculations that reset each period
+def cumVolume = if isNewPeriod then volume else cumVolume[1] + volume;
+def cumVolPrice = if isNewPeriod then volume * price else cumVolPrice[1] + (volume * price);
+
+# Calculate VWAP
+def vwapValue = cumVolPrice / cumVolume;
+
+# Calculate standard deviation for bands
+def priceDev = price - vwapValue;
+def priceDevSq = priceDev * priceDev;
+def cumPriceDevSq = if isNewPeriod then priceDevSq * volume else cumPriceDevSq[1] + (priceDevSq * volume);
+def variance = cumPriceDevSq / cumVolume;
+def stdDev = Sqrt(variance);
+
+# Plot VWAP line
+plot VWAP = vwapValue;
+VWAP.SetDefaultColor(Color.CYAN);
+VWAP.SetLineWeight(2);
+VWAP.SetStyle(Curve.FIRM);
+
+# Upper Standard Deviation Bands
+plot UpperBand1 = if showStdDevBands then vwapValue + (numStdDev1 * stdDev) else Double.NaN;
+UpperBand1.SetDefaultColor(Color.LIGHT_GREEN);
+UpperBand1.SetStyle(Curve.SHORT_DASH);
+
+plot UpperBand2 = if showStdDevBands then vwapValue + (numStdDev2 * stdDev) else Double.NaN;
+UpperBand2.SetDefaultColor(Color.GREEN);
+UpperBand2.SetStyle(Curve.SHORT_DASH);
+
+plot UpperBand3 = if showStdDevBands then vwapValue + (numStdDev3 * stdDev) else Double.NaN;
+UpperBand3.SetDefaultColor(Color.DARK_GREEN);
+UpperBand3.SetStyle(Curve.SHORT_DASH);
+
+# Lower Standard Deviation Bands
+plot LowerBand1 = if showStdDevBands then vwapValue - (numStdDev1 * stdDev) else Double.NaN;
+LowerBand1.SetDefaultColor(Color.LIGHT_RED);
+LowerBand1.SetStyle(Curve.SHORT_DASH);
+
+plot LowerBand2 = if showStdDevBands then vwapValue - (numStdDev2 * stdDev) else Double.NaN;
+LowerBand2.SetDefaultColor(Color.RED);
+LowerBand2.SetStyle(Curve.SHORT_DASH);
+
+plot LowerBand3 = if showStdDevBands then vwapValue - (numStdDev3 * stdDev) else Double.NaN;
+LowerBand3.SetDefaultColor(Color.DARK_RED);
+LowerBand3.SetStyle(Curve.SHORT_DASH);
+
+# Optional cloud between upper and lower 1σ bands
+AddCloud(UpperBand1, LowerBand1, Color.LIGHT_GRAY, Color.LIGHT_GRAY);
+
+# Determine current position relative to VWAP
+def priceAboveVWAP = close > vwapValue;
+
+# Add label showing bullish/bearish status
+AddLabel(
+    showLabel,
+    if priceAboveVWAP
+    then "VWAP: Bullish"
+    else "VWAP: Bearish",
+    if priceAboveVWAP
+    then Color.GREEN
+    else Color.RED);
+
+# Optional: Add bubbles at day open showing VWAP anchor point
+def showBubble = isNewPeriod and !IsNaN(close);
+AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 ```
 
 ### Opening Range Breakout
