@@ -379,13 +379,13 @@ DownSignal.SetDefaultColor(Color.DOWNTICK);
 DownSignal.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
 
 AddLabel(yes, 
-    if RSI > over_Bought then "StochRSI: Over bought" 
-    else if RSI < over_Sold then "StochRSI: Over sold" 
-    else if RSI > 50 then "StochRSI: > 50" 
-    else "StochRSI: < 50", 
-    if RSI > over_Bought then Color.CYAN 
-    else if RSI < over_Sold then Color.ORANGE 
-    else if RSI > 50 then Color.GREEN 
+    if FullK > over_Bought and FullD > over_Bought then "StochRSI: Overbought" 
+    else if FullK < over_Sold and FullD < over_Sold then "StochRSI: Oversold" 
+    else if FullK > 50 then "StochRSI: Bullish" 
+    else "StochRSI: Bearish", 
+    if FullK > over_Bought and FullD > over_Bought then Color.CYAN 
+    else if FullK < over_Sold and FullD < over_Sold then Color.ORANGE 
+    else if FullK > 50 then Color.GREEN 
     else Color.RED);
 ```
 ### Opening Range Breakout
