@@ -273,45 +273,42 @@ AddLabel(yes,
 ### RSI
 - Standard relative strength index (RSI) that includes a label that turns green/red as RSI moves above a given threshold.
 ```
-# RSI Label Indicator
-
-# Inputs
+declare lower;
 input length = 14;
-#hint length: "Number of periods for RSI calculation. Default is 14, which is the standard RSI lookback period."
+input over_Bought = 70;
+#hint over_Bought: Default signal for over bought is 70.
+input over_Sold = 30;
+#hint over_Sold: Default signal for over sold is 30.
+input price = close;
+input averageType = AverageType.WILDERS;
+input showBreakoutSignals = no;
 
-input upperThreshold = 80;
-#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 80."
+def NetChgAvg = MovingAverage(averageType, price - price[1], length);
+def TotChgAvg = MovingAverage(averageType, AbsValue(price - price[1]), length);
+def ChgRatio = if TotChgAvg != 0 then NetChgAvg / TotChgAvg else 0;
 
-input lowerThreshold = 20;
-#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 20."
+plot RSI = 50 * (ChgRatio + 1);
+plot OverSold = over_Sold;
+plot OverBought = over_Bought;
+plot UpSignal = if RSI crosses above OverSold then OverSold else Double.NaN;
+plot DownSignal = if RSI crosses below OverBought then OverBought else Double.NaN;
 
-input showLabel = yes;
-#hint showLabel: "Toggle to show or hide the RSI label on the chart."
+UpSignal.SetHiding(!showBreakoutSignals);
+DownSignal.SetHiding(!showBreakoutSignals);
 
-# Calculate RSI
-def rsi = RSI(length = length);
+RSI.DefineColor("OverBought", GetColor(5));
+RSI.DefineColor("Normal", GetColor(7));
+RSI.DefineColor("OverSold", GetColor(1));
+RSI.AssignValueColor(if RSI > over_Bought then RSI.color("OverBought") else if RSI < over_Sold then RSI.color("OverSold") else RSI.color("Normal"));
 
-# Determine RSI condition
-def rsiOverbought = rsi > upperThreshold;
-def rsiOversold = rsi < lowerThreshold;
-def rsiAbove50 = rsi > 50;
+OverSold.SetDefaultColor(GetColor(8));
+OverBought.SetDefaultColor(GetColor(8));
+UpSignal.SetDefaultColor(Color.UPTICK);
+UpSignal.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+DownSignal.SetDefaultColor(Color.DOWNTICK);
+DownSignal.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
 
-# Add Label
-AddLabel(
-    showLabel,
-    if rsiOverbought
-    then "RSI: Overbought"
-    else if rsiOversold
-    then "RSI: Oversold"
-    else if rsiAbove50
-    then "RSI: > 50"
-    else "RSI: < 50",
-    if rsiOverbought or rsiOversold
-    then Color.CYAN
-    else if rsiAbove50
-    then Color.GREEN
-    else Color.RED
-);
+AddLabel(yes, if RSI > 50 then "RSI: > 50" else "RSI: < 50", if RSI > 50 then Color.GREEN else Color.RED);
 ```
 ### Opening Range Breakout
 ## This study is currently a work in progress -- DO NOT USE YET --
