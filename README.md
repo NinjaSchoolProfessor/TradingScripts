@@ -197,9 +197,6 @@ Alert(trendChange and !isBullish, "SuperTrend Flip: Down", Alert.ONCE, soundDown
 # Volume-Weighted Average Price (VWAP) Indicator
 # Calculates the average price weighted by volume, resetting daily
 # Features:
-# - Customizable price source (Typical Price, Close, HL2, HLC3, OHLC4)
-# - Optional standard deviation bands (1σ, 2σ, 3σ)
-# - Daily reset at market open
 # - Color-coded based on price position relative to VWAP
 # - Summary label showing current relationship
 #
@@ -209,131 +206,68 @@ Alert(trendChange and !isBullish, "SuperTrend Flip: Down", Alert.ONCE, soundDown
 # Created via Anthropic Claude 23-Nov-2025
 # NinjaSchoolProfessor.com
 
-declare upper;
-declare once_per_bar;
 
-input priceSource = {default TYPICAL, CLOSE, HL2, HLC3, OHLC4};
-#hint priceSource: Price calculation method. TYPICAL (default) = (High + Low + Close) / 3, most common for VWAP. CLOSE = closing price only. HL2 = (High + Low) / 2. HLC3 = (High + Low + Close) / 3. OHLC4 = (Open + High + Low + Close) / 4.
+input numDevDn = -0.0;
+#hint numDevDn: "Default standard deviation is -2.0"
+input numDevUp = 0.0;
+#hint numDevUp: "Default standard deviation is 2.0"
+input timeFrame = {default DAY, WEEK, MONTH};
 
-input timeFrame = AggregationPeriod.DAY;
-#hint timeFrame: Time period for VWAP reset. DAY (default) resets at 9:30 AM ET for regular session. Other options: WEEK, MONTH, YEAR for longer-term VWAP calculations.
+def cap = getAggregationPeriod();
+def errorInAggregation =
+    timeFrame == timeFrame.DAY and cap >= AggregationPeriod.WEEK or
+    timeFrame == timeFrame.WEEK and cap >= AggregationPeriod.MONTH;
+assert(!errorInAggregation, "timeFrame should be not less than current chart aggregation period");
 
-input showStdDevBands = yes;
-#hint showStdDevBands: Display standard deviation bands around VWAP. Yes (default) shows 1σ, 2σ, and 3σ bands that act as dynamic support/resistance levels. No hides all bands.
-
-input numStdDev1 = 1.0;
-#hint numStdDev1: First standard deviation multiplier. Default = 1.0. Represents approximately 68% of price action. Commonly used for mean reversion entry/exit points.
-
-input numStdDev2 = 2.0;
-#hint numStdDev2: Second standard deviation multiplier. Default = 2.0. Represents approximately 95% of price action. Used for extended moves and potential reversals.
-
-input numStdDev3 = 3.0;
-#hint numStdDev3: Third standard deviation multiplier. Default = 3.0. Represents approximately 99.7% of price action. Indicates extreme deviations from VWAP.
-
-input showLabel = yes;
-#hint showLabel: Display status label in upper right corner showing "VWAP: Bullish" (green) when price is above VWAP or "VWAP: Bearish" (red) when price is below VWAP. Yes (default) shows label, No hides it.
-
-# Define price based on user selection
-def price;
-switch (priceSource) {
-    case CLOSE:
-        price = close;
-    case HL2:
-        price = (high + low) / 2;
-    case HLC3:
-        price = (high + low + close) / 3;
-    case OHLC4:
-        price = (open + high + low + close) / 4;
-    default:  # TYPICAL
-        price = (high + low + close) / 3;
+def yyyyMmDd = getYyyyMmDd();
+def periodIndx;
+switch (timeFrame) {
+case DAY:
+    periodIndx = yyyyMmDd;
+case WEEK:
+    periodIndx = Floor((daysFromDate(first(yyyyMmDd)) + getDayOfWeek(first(yyyyMmDd))) / 7);
+case MONTH:
+    periodIndx = roundDown(yyyyMmDd / 100, 0);
 }
 
-# Determine if period has rolled (9:30 AM ET reset for DAY timeframe)
-def yyyyMmDd = GetYYYYMMDD();
-def marketOpenTime = 0930;
-def secondsFromOpen = SecondsFromTime(marketOpenTime);
-def secondsTillOpen = SecondsTillTime(marketOpenTime);
+def isPeriodRolled = compoundValue(1, periodIndx != periodIndx[1], yes);
 
-# Create a session identifier that changes at 9:30 AM
-def sessionId = if secondsFromOpen >= 0 and secondsFromOpen[1] < 0 
-                then yyyyMmDd 
-                else sessionId[1];
-
-def isPeriodRolled = CompoundValue(1, sessionId != sessionId[1], yes);
-
-# Cumulative calculations with proper reset logic
 def volumeSum;
 def volumeVwapSum;
 def volumeVwap2Sum;
 
 if (isPeriodRolled) {
     volumeSum = volume;
-    volumeVwapSum = volume * price;
-    volumeVwap2Sum = volume * Sqr(price);
+    volumeVwapSum = volume * vwap;
+    volumeVwap2Sum = volume * Sqr(vwap);
 } else {
-    volumeSum = CompoundValue(1, volumeSum[1] + volume, volume);
-    volumeVwapSum = CompoundValue(1, volumeVwapSum[1] + volume * price, volume * price);
-    volumeVwap2Sum = CompoundValue(1, volumeVwap2Sum[1] + volume * Sqr(price), volume * Sqr(price));
+    volumeSum = compoundValue(1, volumeSum[1] + volume, volume);
+    volumeVwapSum = compoundValue(1, volumeVwapSum[1] + volume * vwap, volume * vwap);
+    volumeVwap2Sum = compoundValue(1, volumeVwap2Sum[1] + volume * Sqr(vwap), volume * Sqr(vwap));
 }
 
-# Calculate VWAP
-def vwapValue = volumeVwapSum / volumeSum;
+def price = volumeVwapSum / volumeSum;
+def deviation = Sqrt(Max(volumeVwap2Sum / volumeSum - Sqr(price), 0));
 
-# Calculate standard deviation
-def deviation = Sqrt(Max(volumeVwap2Sum / volumeSum - Sqr(vwapValue), 0));
-def stdDev = deviation;
+plot VWAP = price;
+plot UpperBand = price + numDevUp * deviation;
+plot LowerBand = price + numDevDn * deviation;
 
-# Plot VWAP line
-plot VWAP = vwapValue;
-VWAP.SetDefaultColor(Color.CYAN);
-VWAP.SetLineWeight(2);
-VWAP.SetStyle(Curve.FIRM);
+VWAP.setDefaultColor(getColor(0));
+UpperBand.setDefaultColor(getColor(2));
+LowerBand.setDefaultColor(getColor(4));
 
-# Upper Standard Deviation Bands
-plot UpperBand1 = if showStdDevBands then vwapValue + (numStdDev1 * stdDev) else Double.NaN;
-UpperBand1.SetDefaultColor(Color.LIGHT_GREEN);
-UpperBand1.SetStyle(Curve.SHORT_DASH);
+# VWAP Cross Label
+def priceAboveVWAP = close > VWAP;
+def priceBelowVWAP = close < VWAP;
 
-plot UpperBand2 = if showStdDevBands then vwapValue + (numStdDev2 * stdDev) else Double.NaN;
-UpperBand2.SetDefaultColor(Color.GREEN);
-UpperBand2.SetStyle(Curve.SHORT_DASH);
-
-plot UpperBand3 = if showStdDevBands then vwapValue + (numStdDev3 * stdDev) else Double.NaN;
-UpperBand3.SetDefaultColor(Color.DARK_GREEN);
-UpperBand3.SetStyle(Curve.SHORT_DASH);
-
-# Lower Standard Deviation Bands
-plot LowerBand1 = if showStdDevBands then vwapValue - (numStdDev1 * stdDev) else Double.NaN;
-LowerBand1.SetDefaultColor(Color.LIGHT_RED);
-LowerBand1.SetStyle(Curve.SHORT_DASH);
-
-plot LowerBand2 = if showStdDevBands then vwapValue - (numStdDev2 * stdDev) else Double.NaN;
-LowerBand2.SetDefaultColor(Color.RED);
-LowerBand2.SetStyle(Curve.SHORT_DASH);
-
-plot LowerBand3 = if showStdDevBands then vwapValue - (numStdDev3 * stdDev) else Double.NaN;
-LowerBand3.SetDefaultColor(Color.DARK_RED);
-LowerBand3.SetStyle(Curve.SHORT_DASH);
-
-# Optional cloud between upper and lower 1σ bands
-AddCloud(UpperBand1, LowerBand1, Color.LIGHT_GRAY, Color.LIGHT_GRAY);
-
-# Determine current position relative to VWAP
-def priceAboveVWAP = close > vwapValue;
-
-# Add label showing bullish/bearish status
-AddLabel(
-    showLabel,
-    if priceAboveVWAP
-    then "VWAP: Bullish"
-    else "VWAP: Bearish",
-    if priceAboveVWAP
-    then Color.GREEN
-    else Color.RED);
-
-# Optional: Add bubbles at day open showing VWAP anchor point
-def showBubble = isPeriodRolled and !IsNaN(close);
-AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
+AddLabel(yes, 
+    if priceAboveVWAP then "VWAP: Bullish" 
+    else if priceBelowVWAP then "VWAP: Bearish" 
+    else "VWAP: Neutral", 
+    if priceAboveVWAP then Color.GREEN 
+    else if priceBelowVWAP then Color.RED 
+    else Color.GRAY);
 ```
 
 ### RSI
