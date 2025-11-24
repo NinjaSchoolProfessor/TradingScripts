@@ -329,16 +329,16 @@ AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 
 # Inputs
 input length = 14;
-#hint length: "Number of periods for RSI calculation. Default is 14, which is the standard RSI lookback period.";
+#hint length: "Number of periods for RSI calculation. Default is 14, which is the standard RSI lookback period."
 
 input upperThreshold = 80;
-#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 80.";
+#hint upperThreshold: "RSI value above which the market is considered Overbought. Default is 80."
 
 input lowerThreshold = 20;
-#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 20.";
+#hint lowerThreshold: "RSI value below which the market is considered Oversold. Default is 20."
 
 input showLabel = yes;
-#hint showLabel: "Toggle to show or hide the RSI label on the chart.";
+#hint showLabel: "Toggle to show or hide the RSI label on the chart."
 
 # Calculate RSI
 def rsi = RSI(length = length);
@@ -346,6 +346,7 @@ def rsi = RSI(length = length);
 # Determine RSI condition
 def rsiOverbought = rsi > upperThreshold;
 def rsiOversold = rsi < lowerThreshold;
+def rsiAbove50 = rsi > 50;
 
 # Add Label
 AddLabel(
@@ -354,10 +355,14 @@ AddLabel(
     then "RSI: Overbought"
     else if rsiOversold
     then "RSI: Oversold"
-    else "RSI: Neutral",
+    else if rsiAbove50
+    then "RSI: > 50"
+    else "RSI: < 50",
     if rsiOverbought or rsiOversold
-    then Color.ORANGE
-    else Color.GRAY
+    then Color.CYAN
+    else if rsiAbove50
+    then Color.GREEN
+    else Color.RED
 );
 ```
 ### Opening Range Breakout
