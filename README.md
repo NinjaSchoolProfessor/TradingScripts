@@ -308,7 +308,15 @@ UpSignal.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
 DownSignal.SetDefaultColor(Color.DOWNTICK);
 DownSignal.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
 
-AddLabel(yes, if RSI > 50 then "RSI: > 50" else "RSI: < 50", if RSI > 50 then Color.GREEN else Color.RED);
+AddLabel(yes, 
+    if RSI > over_Bought then "RSI: Over bought" 
+    else if RSI < over_Sold then "RSI: Over sold" 
+    else if RSI > 50 then "RSI: > 50" 
+    else "RSI: < 50", 
+    if RSI > over_Bought then Color.CYAN 
+    else if RSI < over_Sold then Color.ORANGE 
+    else if RSI > 50 then Color.GREEN 
+    else Color.RED);
 ```
 ### Opening Range Breakout
 ## This study is currently a work in progress -- DO NOT USE YET --
