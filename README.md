@@ -248,26 +248,40 @@ switch (priceSource) {
         price = (high + low + close) / 3;
 }
 
-# Check if we're at the start of a new time period (9:30 AM ET market open)
-def isNewPeriod = if SecondsFromTime(0930) == 0 
-                  then yes 
-                  else if GetDay() != GetDay()[1] and SecondsFromTime(0930) >= 0
-                  then yes
-                  else no;
+# Determine if period has rolled (9:30 AM ET reset for DAY timeframe)
+def yyyyMmDd = GetYYYYMMDD();
+def marketOpenTime = 0930;
+def secondsFromOpen = SecondsFromTime(marketOpenTime);
+def secondsTillOpen = SecondsTillTime(marketOpenTime);
 
-# Cumulative calculations that reset each period
-def cumVolume = if isNewPeriod then volume else cumVolume[1] + volume;
-def cumVolPrice = if isNewPeriod then volume * price else cumVolPrice[1] + (volume * price);
+# Create a session identifier that changes at 9:30 AM
+def sessionId = if secondsFromOpen >= 0 and secondsFromOpen[1] < 0 
+                then yyyyMmDd 
+                else sessionId[1];
+
+def isPeriodRolled = CompoundValue(1, sessionId != sessionId[1], yes);
+
+# Cumulative calculations with proper reset logic
+def volumeSum;
+def volumeVwapSum;
+def volumeVwap2Sum;
+
+if (isPeriodRolled) {
+    volumeSum = volume;
+    volumeVwapSum = volume * price;
+    volumeVwap2Sum = volume * Sqr(price);
+} else {
+    volumeSum = CompoundValue(1, volumeSum[1] + volume, volume);
+    volumeVwapSum = CompoundValue(1, volumeVwapSum[1] + volume * price, volume * price);
+    volumeVwap2Sum = CompoundValue(1, volumeVwap2Sum[1] + volume * Sqr(price), volume * Sqr(price));
+}
 
 # Calculate VWAP
-def vwapValue = cumVolPrice / cumVolume;
+def vwapValue = volumeVwapSum / volumeSum;
 
-# Calculate standard deviation for bands
-def priceDev = price - vwapValue;
-def priceDevSq = priceDev * priceDev;
-def cumPriceDevSq = if isNewPeriod then priceDevSq * volume else cumPriceDevSq[1] + (priceDevSq * volume);
-def variance = cumPriceDevSq / cumVolume;
-def stdDev = Sqrt(variance);
+# Calculate standard deviation
+def deviation = Sqrt(Max(volumeVwap2Sum / volumeSum - Sqr(vwapValue), 0));
+def stdDev = deviation;
 
 # Plot VWAP line
 plot VWAP = vwapValue;
@@ -318,7 +332,7 @@ AddLabel(
     else Color.RED);
 
 # Optional: Add bubbles at day open showing VWAP anchor point
-def showBubble = isNewPeriod and !IsNaN(close);
+def showBubble = isPeriodRolled and !IsNaN(close);
 AddChartBubble(showBubble, vwapValue, "VWAP Start", Color.CYAN, yes);
 ```
 
