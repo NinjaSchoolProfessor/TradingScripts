@@ -390,6 +390,9 @@ AddLabel(yes,
 ```
 ### Opening Range Breakout
 ## This study is currently a work in progress -- DO NOT USE YET --
+## This study is currently a work in progress -- DO NOT USE YET --
+## This study is currently a work in progress -- DO NOT USE YET --
+
 - This script identifies and tracks Opening Range Breakouts (ORB) for intraday trading. It measures the high and low during a user-defined opening period, typically the first 15 minutes, then visualizes that range on the chart. The script flags breakouts when price moves and closes above the opening high for a potential bullish setup or below the opening low for a potential bearish setup. When a breakout occurs, it also calculates ATR-based profit targets to help with trade planning. The previous day’s close is displayed for added context, and a real-time status label shows the current ORB direction.
 - Original Source: [https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/](https://usethinkscript.com/threads/opening-range-breakout-indicator-for-thinkorswim.16/)
 ```
@@ -821,58 +824,6 @@ alert(BearishBreakoutCondition, "ORB Bearish Breakout", Alert.Bar, Sound.Ring);
 
 ### SuperTrend Stock Hacker Scanner
  - Originial Source: [https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/](https://usethinkscript.com/threads/supertrend-indicator-by-mobius-for-thinkorswim.7/)
- - Modified using ChatGPT on 29-Oct-2025
-
-```
-# SuperTrend Scan (ATR 21, Multiplier 1)
-# Based on Mobius logic, adapted for scanning
-input AtrMult = 1.0;     # multiplier = 1
-input nATR    = 21;      # ATR length = 21
-
-def h = high;
-def l = low;
-def c = close;
-
-# Wilder ATR
-def ATR = MovingAverage(AverageType.WILDERS, TrueRange(h, c, l), nATR);
-
-# Raw bands
-def UpperBand = HL2 + AtrMult * ATR;
-def LowerBand = HL2 - AtrMult * ATR;
-
-# Final bands that carry until invalidated
-def FUp = CompoundValue(
-    1,
-    if UpperBand < FUp[1] or c[1] > FUp[1] then UpperBand else FUp[1],
-    UpperBand
-);
-
-def FLo = CompoundValue(
-    1,
-    if LowerBand > FLo[1] or c[1] < FLo[1] then LowerBand else FLo[1],
-    LowerBand
-);
-
-# Trend state
-def Trend = CompoundValue(
-    1,
-    if IsNaN(Trend[1]) then 1
-    else if Trend[1] == -1 and c > FUp[1] then 1
-    else if Trend[1] ==  1 and c < FLo[1] then -1
-    else Trend[1],
-    1
-);
-
-# SuperTrend line
-def ST = if Trend == 1 then FLo else FUp;
-
-# Round for scan stability
-def ST_R = Round(ST / tickSize(), 0) * tickSize();
-
-# Choose one direction for the scan
-# plot SuperTrendFlipUp   = if c crosses above ST_R then 1 else 0;
-plot SuperTrendFlipDown = if c crosses below ST_R then 1 else 0;
-```
 
 ### Formatting
 - [https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN](https://toslc.thinkorswim.com/center/reference/thinkScript/Constants/Color/Color-GREEN)
