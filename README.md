@@ -389,8 +389,7 @@ AddLabel(yes,
     else Color.RED);
 ```
 ### Opening Range Breakout
-## This study is currently a work in progress -- DO NOT USE YET --
-## This study is currently a work in progress -- DO NOT USE YET --
+
 ## This study is currently a work in progress -- DO NOT USE YET --
 
 - This script identifies and tracks Opening Range Breakouts (ORB) for intraday trading. It measures the high and low during a user-defined opening period, typically the first 15 minutes, then visualizes that range on the chart. The script flags breakouts when price moves and closes above the opening high for a potential bullish setup or below the opening low for a potential bearish setup. When a breakout occurs, it also calculates ATR-based profit targets to help with trade planning. The previous day’s close is displayed for added context, and a real-time status label shows the current ORB direction.
