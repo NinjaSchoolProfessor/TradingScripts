@@ -1,4 +1,4 @@
-	# TradingScripts
+# Trading Scripts for Think or Swim
 Scripts to improve insights on various trading platforms
 
 ---
