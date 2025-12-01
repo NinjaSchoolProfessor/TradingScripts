@@ -198,15 +198,6 @@ The indicator accumulates volume throughout each trend:
 | **Delta Label** | Net volume pressure with color indicator |
 | **Customizable Alerts** | Audio alerts with selectable sounds for trend changes |
 
-## Installation
-
-1. Open ThinkOrSwim
-2. Go to **Charts** → **Studies** → **Edit Studies**
-3. Click **Create** in the lower left
-4. Name it "Volumatic_VIDYA"
-5. Paste the code and click **OK**
-6. Apply to chart
-
 ## Interpretation Guide
 
 ### Trend Analysis
@@ -268,6 +259,160 @@ Configure different sounds for bullish vs bearish alerts to quickly identify tre
 - Consider combining with RSI or MACD for additional confirmation
 - Customize alert sounds to distinguish between bullish and bearish signals
 - Not financial advice — always backtest before live trading
+
+## Installation
+
+1. Open ThinkOrSwim
+2. Go to **Charts** → **Studies** → **Edit Studies**
+3. Click **Create** in the lower left
+4. Name it "Volumatic_VIDYA"
+5. Paste the code and click **OK**
+6. Apply to chart
+
+```
+# Volumatic VIDYA
+# Converted from Pine Script to ThinkOrSwim thinkScript
+
+declare upper;
+
+# Timeframe Selection
+input timeFrame = {default "5m", "1m", "15m", "1h", "4h", "1d"};
+#hint timeFrame: Recommended settings by timeframe:\n1m: Length 12 | Momentum 28 | ATR 2.8\n5m: Length 10 | Momentum 20 | ATR 2.4\n15m: Length 10 | Momentum 18 | ATR 2.0\n 1h: Length 10 | Momentum 16 | ATR 1.7\n4h: Length 8 | Momentum 14 | ATR 1.6\n1d: Length 8 | Momentum 14 | ATR 1.5
+
+# Core Parameters
+input vidyaLength = 10;
+#hint vidyaLength: VIDYA smoothing period. \nHigher = smoother, slower.\n Lower = responsive, noisier. \n--------------------\nBy Timeframe:\n 1m = 12\n 5m = 10 (default)\n 15m = 10 \n1h = 10\n 4h = 8\n 1d = 8 \n--------------------\n By Style: Aggressive = 8\n Balanced = 10\n Conservative = 12\n\n
+
+input vidyaMomentum = 20;
+#hint vidyaMomentum: CMO lookback period. \nHigher = stable, less adaptive. \nLower = fast, sensitive.\n--------------------\nBy Timeframe:\n 1m = 28\n 5m = 20 (default)\n 15m = 18\n 1h = 16\n 4h = 14\n 1d = 14\n--------------------\n By Style: Aggressive = 16\n Balanced = 20\n Conservative = 25
+
+input atrMult = 2.4;
+#hint atrMult: ATR multiplier for bands. PRIMARY TUNING KNOB.\nHigher = wider bands, fewer signals. \nLower = tighter bands, more signals.\n\nBy Timeframe: 1m = 2.8, \n5m = 2.4 (default)\n 15m = 2.0\n 1h = 1.7\n 4h = 1.6\n 1d = 1.5\n--------------------\n By Style: Aggressive = 2.0\n Balanced = 2.2\n Conservative = 2.8
+
+input atrLength = 14;
+#hint atrLength: ATR calculation period. Default 14 works for most cases.
+
+input showSummary = yes;
+#hint showSummary: Toggle summary labels (VIDYA trend, Buy Vol, Sell Vol, Delta).
+
+# Alert Sound Options
+input bullishAlertSound = {default "Ding", "Bell", "Chimes", "Ring", "NoSound"};
+#hint bullishAlertSound: Sound when trend turns bullish.
+
+input bearishAlertSound = {default "Bell", "Ding", "Chimes", "Ring", "NoSound"};
+#hint bearishAlertSound: Sound when trend turns bearish.
+
+# Colors
+DefineGlobalColor("Bull", Color.GREEN);
+DefineGlobalColor("Bear", Color.RED);
+
+# VIDYA Calculation
+def momentum = close - close[1];
+def sumPosMomentum = Sum(if momentum >= 0 then momentum else 0, vidyaMomentum);
+def sumNegMomentum = Sum(if momentum < 0 then -momentum else 0, vidyaMomentum);
+def absCMO = AbsValue(100 * (sumPosMomentum - sumNegMomentum) / (sumPosMomentum + sumNegMomentum + 0.0001));
+def alpha = 2 / (vidyaLength + 1);
+def alphaAdj = alpha * absCMO / 100;
+
+rec vidyaRaw = if IsNaN(vidyaRaw[1]) then close else alphaAdj * close + (1 - alphaAdj) * vidyaRaw[1];
+def vidya = Average(vidyaRaw, 15);
+
+# ATR Bands
+def atr = ATR(atrLength);
+def upperBandVal = vidya + (atr * atrMult);
+def lowerBandVal = vidya - (atr * atrMult);
+
+# Trend Detection
+rec trend = if close > upperBandVal then 1 
+            else if close < lowerBandVal then -1 
+            else if IsNaN(trend[1]) then 1 
+            else trend[1];
+
+def trendUp = trend == 1 and trend[1] == -1;
+def trendDown = trend == -1 and trend[1] == 1;
+
+# Volume Pressure Calculation
+def isUpBar = close > open;
+def barVol = volume;
+
+rec trendBuyVol = if trendUp or trendDown then 0 
+                  else if isUpBar then trendBuyVol[1] + barVol 
+                  else trendBuyVol[1];
+
+rec trendSellVol = if trendUp or trendDown then 0 
+                   else if !isUpBar then trendSellVol[1] + barVol 
+                   else trendSellVol[1];
+
+def deltaVolume = trendBuyVol - trendSellVol;
+
+# Plot VIDYA Line
+plot VIDYALine = vidya;
+VIDYALine.SetLineWeight(2);
+VIDYALine.AssignValueColor(if trend == 1 then GlobalColor("Bull") else GlobalColor("Bear"));
+
+# Plot Bands
+plot UpperBand = upperBandVal;
+plot LowerBand = lowerBandVal;
+UpperBand.SetDefaultColor(Color.DARK_GRAY);
+LowerBand.SetDefaultColor(Color.DARK_GRAY);
+UpperBand.SetStyle(Curve.SHORT_DASH);
+LowerBand.SetStyle(Curve.SHORT_DASH);
+
+# Cloud Fill
+AddCloud(upperBandVal, vidya, Color.DARK_GREEN, Color.DARK_RED, yes);
+AddCloud(vidya, lowerBandVal, Color.DARK_GREEN, Color.DARK_RED, yes);
+
+# Buy/Sell Arrows
+plot BuySignal = if trendUp then low - atr * 0.5 else Double.NaN;
+BuySignal.SetPaintingStrategy(PaintingStrategy.ARROW_UP);
+BuySignal.SetDefaultColor(GlobalColor("Bull"));
+BuySignal.SetLineWeight(3);
+
+plot SellSignal = if trendDown then high + atr * 0.5 else Double.NaN;
+SellSignal.SetPaintingStrategy(PaintingStrategy.ARROW_DOWN);
+SellSignal.SetDefaultColor(GlobalColor("Bear"));
+SellSignal.SetLineWeight(3);
+
+# Buy/Sell Bubbles - Only on trend change
+AddChartBubble(trendUp, low - atr * 0.7, "Buy", GlobalColor("Bull"), no);
+AddChartBubble(trendDown, high + atr * 0.7, "Sell", GlobalColor("Bear"), yes);
+
+# Summary Labels
+AddLabel(showSummary, "VIDYA: " + (if trend == 1 then "Bullish" else "Bearish"),
+         if trend == 1 then GlobalColor("Bull") else GlobalColor("Bear"));
+
+AddLabel(showSummary, "Buy Vol: " + 
+         (if trendBuyVol >= 1000000000 then AsText(Round(trendBuyVol / 1000000000, 2)) + "B"
+          else if trendBuyVol >= 1000000 then AsText(Round(trendBuyVol / 1000000, 2)) + "M"
+          else if trendBuyVol >= 1000 then AsText(Round(trendBuyVol / 1000, 2)) + "K"
+          else AsText(Round(trendBuyVol, 0))),
+         GlobalColor("Bull"));
+
+AddLabel(showSummary, "Sell Vol: " + 
+         (if trendSellVol >= 1000000000 then AsText(Round(trendSellVol / 1000000000, 2)) + "B"
+          else if trendSellVol >= 1000000 then AsText(Round(trendSellVol / 1000000, 2)) + "M"
+          else if trendSellVol >= 1000 then AsText(Round(trendSellVol / 1000, 2)) + "K"
+          else AsText(Round(trendSellVol, 0))),
+         GlobalColor("Bear"));
+
+AddLabel(showSummary, "Delta: " + 
+         (if AbsValue(deltaVolume) >= 1000000000 then AsText(Round(deltaVolume / 1000000000, 2)) + "B"
+          else if AbsValue(deltaVolume) >= 1000000 then AsText(Round(deltaVolume / 1000000, 2)) + "M"
+          else if AbsValue(deltaVolume) >= 1000 then AsText(Round(deltaVolume / 1000, 2)) + "K"
+          else AsText(Round(deltaVolume, 0))),
+         if deltaVolume >= 0 then GlobalColor("Bull") else GlobalColor("Bear"));
+
+# Alerts with selectable sounds
+Alert(trendUp and bullishAlertSound == bullishAlertSound."Ding", "VIDYA: Bullish", Alert.BAR, Sound.Ding);
+Alert(trendUp and bullishAlertSound == bullishAlertSound."Bell", "VIDYA: Bullish", Alert.BAR, Sound.Bell);
+Alert(trendUp and bullishAlertSound == bullishAlertSound."Chimes", "VIDYA: Bullish", Alert.BAR, Sound.Chimes);
+Alert(trendUp and bullishAlertSound == bullishAlertSound."Ring", "VIDYA: Bullish", Alert.BAR, Sound.Ring);
+
+Alert(trendDown and bearishAlertSound == bearishAlertSound."Ding", "VIDYA: Bearish", Alert.BAR, Sound.Ding);
+Alert(trendDown and bearishAlertSound == bearishAlertSound."Bell", "VIDYA: Bearish", Alert.BAR, Sound.Bell);
+Alert(trendDown and bearishAlertSound == bearishAlertSound."Chimes", "VIDYA: Bearish", Alert.BAR, Sound.Chimes);
+Alert(trendDown and bearishAlertSound == bearishAlertSound."Ring", "VIDYA: Bearish", Alert.BAR, Sound.Ring);
+```
 
 ## Credits
 
