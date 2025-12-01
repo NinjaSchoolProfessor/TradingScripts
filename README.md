@@ -24,7 +24,9 @@ A thinkScript implementation of the Volumatic Variable Index Dynamic Average (VI
 
 ## What is Volumatic VIDYA?
 
-Volumatic VIDYA combines the Variable Index Dynamic Average (VIDYA) with volume pressure analysis to provide a comprehensive trend-following system. Unlike traditional moving averages that use fixed smoothing periods, VIDYA dynamically adjusts its responsiveness based on market momentum using the Chande Momentum Oscillator (CMO).
+The Variable Index Dynamic Average (VIDYA) is a dynamic moving average that adjusts itself based on volatility and momentum rather than relying on a fixed period. It uses the Chande Momentum Oscillator (CMO) to measure the strength of price movement and modifies its smoothing factor accordingly. When momentum increases, VIDYA becomes more responsive and tracks price changes faster; when momentum fades, it smooths out and filters noise.
+
+Volumatic VIDYA builds on this foundation by integrating volume pressure analysis with VIDYA’s adaptive behavior. This pairing creates a trend-following system that not only reacts to momentum shifts but also factors in buying and selling pressure. Compared to traditional averages like the SMA or EMA, which stay fixed regardless of conditions, Volumatic VIDYA responds dynamically to both momentum and volume, making it more effective in fast-changing or volatile markets.
 
 The indicator provides:
 
