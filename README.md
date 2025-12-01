@@ -1,21 +1,279 @@
 # Trading Scripts for Think or Swim
 Scripts to improve insights on various trading platforms
+MIT License - Free to use and modify
 
 ---
+
 ## Table of contents
 
-1. [Trend Magic](#trend-magic)
-2. [SuperTrend](#supertrend)
-3. [VWAP](#vwap)
-4. [RSI](#rsi)
-5. [StochRSI](#stochrsi)
-6. [Opening Range Breakout](#opening-range-breakout)
-7. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
-8. [Formatting](#formatting)
+1. [Volumatic VIDYA](#volumatic_vidya)
+2. [Trend Magic](#trend-magic)
+4. [SuperTrend](#supertrend)
+5. [VWAP](#vwap)
+6. [RSI](#rsi)
+7. [StochRSI](#stochrsi)
+8. [Opening Range Breakout](#opening-range-breakout)
+9. [SuperTrend Stock Hacker Scanner](#super-trend-stock-hacker-scanner)
+10. [Formatting](#formatting)
 
 ---
 
-## ThinkOrSwim - ToS - ThinkScripts
+# Volumatic VIDYA
+
+A thinkScript implementation of the Volumatic Variable Index Dynamic Average (VIDYA) indicator with volume pressure analysis for ThinkOrSwim (TOS).
+
+## What is Volumatic VIDYA?
+
+Volumatic VIDYA combines the Variable Index Dynamic Average (VIDYA) with volume pressure analysis to provide a comprehensive trend-following system. Unlike traditional moving averages that use fixed smoothing periods, VIDYA dynamically adjusts its responsiveness based on market momentum using the Chande Momentum Oscillator (CMO).
+
+The indicator provides:
+
+- **Adaptive trend line** that responds faster during strong momentum and slower during consolidation
+- **ATR-based cloud** for volatility-adjusted support/resistance zones
+- **Delta volume tracking** to measure buy/sell pressure within each trend
+- **Buy/Sell signals** with visual bubbles and arrows at trend reversals
+- **Summary labels** displaying real-time trend status and volume metrics
+- **Customizable alerts** with selectable sounds for trend changes
+
+## Visual Components
+
+### VIDYA Line (Colored Trend Line)
+
+The bright colored line running through price is the Variable Index Dynamic Average itself. This line dynamically adjusts its smoothing based on momentum (CMO) — during strong moves it reacts faster; during consolidation it smooths more.
+
+| Line Color | Meaning |
+|------------|---------|
+| **Green** | Bullish trend active — price closed above upper band |
+| **Red** | Bearish trend active — price closed below lower band |
+
+The VIDYA line is more responsive than traditional moving averages while filtering out noise, making it ideal for trend identification.
+
+### ATR Cloud (Shaded Volatility Envelope)
+
+The colored cloud surrounding the VIDYA line represents the ATR-based volatility envelope:
+
+| Band | Calculation |
+|------|-------------|
+| **Upper Band** | VIDYA + (ATR × Multiplier) |
+| **Lower Band** | VIDYA - (ATR × Multiplier) |
+
+**What the cloud tells you:**
+
+| Price Action | What Happens | Interpretation |
+|--------------|--------------|----------------|
+| Price inside cloud | No signal generated | Trend continuation, noise filtered |
+| Price closes above upper band | Line turns green, "Buy" signal | Bullish trend flip |
+| Price closes below lower band | Line turns red, "Sell" signal | Bearish trend flip |
+
+**Cloud characteristics:**
+
+| Cloud Width | Meaning |
+|-------------|---------|
+| Wide cloud | High volatility environment |
+| Narrow cloud | Low volatility / consolidation |
+
+The cloud acts as a **noise filter**. Small pullbacks within the bands don't trigger trend changes — only decisive moves through the bands generate signals. When price is riding along the top of a green cloud, that's textbook bullish behavior: VIDYA trending up with price respecting the upper band as dynamic support.
+
+### Buy/Sell Signals
+
+| Signal | Appearance | Trigger |
+|--------|------------|---------|
+| **Buy** | Green arrow + "Buy" bubble below price | Price closed above upper band (trend flipped bullish) |
+| **Sell** | Red arrow + "Sell" bubble above price | Price closed below lower band (trend flipped bearish) |
+
+Signals only appear at trend changes, keeping the chart clean and actionable.
+
+## Summary Labels
+
+The indicator displays four summary labels at the top of the chart:
+
+| Label | Color | Description |
+|-------|-------|-------------|
+| **VIDYA: Bullish** | Green | Uptrend active — price closed above upper band |
+| **VIDYA: Bearish** | Red | Downtrend active — price closed below lower band |
+| **Buy Vol: [value]** | Green | Cumulative volume on up bars (close > open) since last trend change |
+| **Sell Vol: [value]** | Red | Cumulative volume on down bars (close < open) since last trend change |
+| **Delta: [value]** | Green (positive) / Red (negative) | Net volume pressure (Buy Vol - Sell Vol) since trend started |
+
+### Understanding Delta
+
+**Delta = Buy Volume − Sell Volume** (during the current trend)
+
+Delta resets to zero each time the trend flips.
+
+| Delta | During Uptrend | During Downtrend |
+|-------|----------------|------------------|
+| **Large positive** | Confirms strength — buyers supporting the move | Warning — price falling but buyers active |
+| **Small positive** | Weak buying — potential exhaustion | Mixed signals |
+| **Large negative** | Warning — price rising but sellers active (divergence) | Confirms strength — sellers supporting the move |
+| **Small negative** | Mixed signals | Weak selling — potential reversal |
+
+**Example:** Buy Vol: 44.46K, Sell Vol: 40.28K, Delta: 4.18K (green) during a bullish trend confirms the uptrend has participation — buyers accumulated ~4.18K more volume than sellers.
+
+## How It Works
+
+### VIDYA Calculation
+
+1. **Momentum Measurement**: Calculate price change over the momentum period
+2. **CMO Calculation**: Separate positive and negative momentum sums to derive the absolute CMO value
+3. **Dynamic Alpha**: `alpha = 2 / (length + 1)` adjusted by CMO percentage
+4. **VIDYA Value**: `VIDYA = (alpha × |CMO| / 100 × price) + (1 - alpha × |CMO| / 100) × previous VIDYA`
+5. **Smoothing**: Final value smoothed with a 15-period SMA
+
+### Trend Detection
+
+| Condition | Trend |
+|-----------|-------|
+| Price closes above upper band | Bullish |
+| Price closes below lower band | Bearish |
+| Price between bands | Previous trend continues |
+
+### Volume Pressure (Delta Volume)
+
+The indicator accumulates volume throughout each trend:
+
+- **Up bars** (close > open) add to buy volume
+- **Down bars** (close < open) add to sell volume
+- **Delta** = Buy Volume - Sell Volume
+- Delta resets on each trend change
+
+## Quick Reference Tables
+
+### Recommended Settings by Timeframe
+
+| Timeframe | vidyaLength | vidyaMomentum | atrMult |
+|-----------|-------------|---------------|---------|
+| 1m | 12 | 28 | 2.8 |
+| 5m | 10 | 20 | 2.4 |
+| 15m | 10 | 18 | 2.0 |
+| 1h | 10 | 16 | 1.7 |
+| 4h | 8 | 14 | 1.6 |
+| 1d | 8 | 14 | 1.5 |
+
+### Settings by Trading Style
+
+| Style | vidyaLength | vidyaMomentum | atrMult | Notes |
+|-------|-------------|---------------|---------|-------|
+| Aggressive | 8 | 16 | 2.0 | More signals, earlier entries |
+| Balanced | 10 | 20 | 2.2 | Default, good all-around |
+| Conservative | 12 | 25 | 2.8 | Fewer signals, higher quality |
+
+## Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| timeFrame | 5m | Reference for recommended settings (1m, 5m, 15m, 1h, 4h, 1d) |
+| vidyaLength | 10 | Base smoothing period for VIDYA calculation |
+| vidyaMomentum | 20 | Lookback period for CMO calculation |
+| atrMult | 2.4 | ATR multiplier for upper/lower bands (cloud width) |
+| atrLength | 14 | Period for ATR calculation |
+| showSummary | yes | Toggle summary labels on/off |
+| bullishAlertSound | Ding | Sound for bullish alerts (Ding, Bell, Chimes, Ring, NoSound) |
+| bearishAlertSound | Bell | Sound for bearish alerts (Ding, Bell, Chimes, Ring, NoSound) |
+
+### Parameter Tuning
+
+| Adjustment | Effect |
+|------------|--------|
+| **Higher vidyaLength** | Smoother line, slower to react |
+| **Lower vidyaLength** | More responsive, more noise |
+| **Higher vidyaMomentum** | More stable CMO, less adaptive |
+| **Lower vidyaMomentum** | Faster adaptation, more sensitive |
+| **Higher atrMult** | Wider cloud, fewer signals, higher quality |
+| **Lower atrMult** | Tighter cloud, more signals, earlier entries |
+
+**Note:** The `atrMult` is your **primary tuning knob**. Adjust this first, then fine-tune the other parameters if needed.
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **VIDYA Line** | Adaptive moving average with trend-based coloring (green/red) |
+| **ATR Cloud** | Dynamic upper/lower bands with shaded fill showing volatility envelope |
+| **Buy/Sell Arrows** | Visual arrows at trend reversals |
+| **Buy/Sell Bubbles** | Labeled bubbles ("Buy"/"Sell") at trend changes only |
+| **VIDYA Label** | Shows current trend direction (Bullish/Bearish) |
+| **Buy Vol Label** | Cumulative volume on up bars since trend started |
+| **Sell Vol Label** | Cumulative volume on down bars since trend started |
+| **Delta Label** | Net volume pressure with color indicator |
+| **Customizable Alerts** | Audio alerts with selectable sounds for trend changes |
+
+## Installation
+
+1. Open ThinkOrSwim
+2. Go to **Charts** → **Studies** → **Edit Studies**
+3. Click **Create** in the lower left
+4. Name it "Volumatic_VIDYA"
+5. Paste the code and click **OK**
+6. Apply to chart
+
+## Interpretation Guide
+
+### Trend Analysis
+
+| Signal | Meaning |
+|--------|---------|
+| Green VIDYA line | Bullish trend active |
+| Red VIDYA line | Bearish trend active |
+| Green "Buy" bubble + arrow | New bullish trend starting |
+| Red "Sell" bubble + arrow | New bearish trend starting |
+| Price riding top of green cloud | Strong bullish momentum, upper band acting as support |
+| Price riding bottom of red cloud | Strong bearish momentum, lower band acting as resistance |
+
+### Volume Analysis
+
+| Delta Volume | Interpretation |
+|--------------|----------------|
+| Large positive | Strong buying pressure supporting uptrend |
+| Small positive | Weak buying pressure, potential exhaustion |
+| Large negative | Strong selling pressure supporting downtrend |
+| Small negative | Weak selling pressure, potential reversal |
+
+## VIDYA vs Traditional Moving Averages
+
+| Aspect | SMA/EMA | VIDYA |
+|--------|---------|-------|
+| **Smoothing** | Fixed period | Adaptive to momentum |
+| **Responsiveness** | Constant | Faster in trends, slower in ranges |
+| **Whipsaws** | More frequent | Reduced due to dynamic adjustment |
+| **Calculation** | Simple average | CMO-weighted smoothing |
+
+## Use Cases
+
+- **Trend Following**: Enter on buy/sell signals, ride trends with VIDYA as trailing reference
+- **Volume Confirmation**: Validate trends by checking delta volume alignment
+- **Momentum Assessment**: CMO-based adaptation reveals underlying momentum strength
+- **Risk Management**: Use ATR cloud bands as dynamic stop-loss reference
+- **Divergence Detection**: Watch for delta diverging from price direction
+
+## Alert Sounds
+
+Configure different sounds for bullish vs bearish alerts to quickly identify trend direction without looking at the chart:
+
+| Sound Option | Description |
+|--------------|-------------|
+| Ding | Short, high-pitched tone (default for bullish) |
+| Bell | Classic bell sound (default for bearish) |
+| Chimes | Multi-tone chime |
+| Ring | Ringing tone |
+| NoSound | Silent (visual only) |
+
+## Usage Notes
+
+- Works on any timeframe and instrument
+- Most effective in trending markets with clear directional moves
+- Delta volume most meaningful on assets with reliable volume data (stocks, futures)
+- The cloud width indicates current volatility — wider cloud = more volatile conditions
+- Price riding the edge of the cloud confirms trend strength
+- Consider combining with RSI or MACD for additional confirmation
+- Customize alert sounds to distinguish between bullish and bearish signals
+- Not financial advice — always backtest before live trading
+
+## Credits
+
+Inspired by the original [Volumatic VIDYA by BigBeluga](https://www.tradingview.com/script/llhVjhA5-Volumatic-Variable-Index-Dynamic-Average-BigBeluga/).
+
+---
 
 ### Trend Magic
 - Trend Magic (CCI-based) avoids noise and defines the big picture. (pair with Super Trend)
