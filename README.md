@@ -139,16 +139,24 @@ The indicator accumulates volume throughout each trend:
 
 ## Quick Reference Tables
 
+## Recommended Timeframes for Day Trading
+
+| Timeframe | Best For                   | Trade Frequency |
+|----------|-----------------------------|-----------------|
+| 1m       | Scalping only               | High, many signals with lots of noise |
+| 5m       | Best all-around for day trading | Moderate, about 3 to 8 signals per day |
+| 15m      | Fewer but higher quality signals | Low, about 1 to 4 signals per day |
+
 ### Recommended Settings by Timeframe
 
-| Timeframe | vidyaLength | vidyaMomentum | atrMult |
-|-----------|-------------|---------------|---------|
-| 1m | 12 | 28 | 2.8 |
-| 5m | 10 | 20 | 2.4 |
-| 15m | 10 | 18 | 2.0 |
-| 1h | 10 | 16 | 1.7 |
-| 4h | 8 | 14 | 1.6 |
-| 1d | 8 | 14 | 1.5 |
+| Timeframe | VIDYA Length | VIDYA Momentum | ATR Multiplier | ATR Mult Range | Reasoning |
+|-----------|--------------|----------------|----------------|----------------|-----------|
+| 1m | 12 | 28 | 2.8 | 2.5 to 3.0 | More noise, needs wider bands to filter false signals |
+| 5m | 10 | 20 | 2.4 | 2.0 to 2.5 | Good balance for day trading |
+| 15m | 10 | 18 | 2.0 | 1.8 to 2.2 | Cleaner price action, can tighten bands |
+| 1h | 10 | 16 | 1.7 | 1.5 to 2.0 | Swing trading, price moves are more deliberate |
+| 4h | 8 | 14 | 1.6 | 1.4 to 1.8 | Position trading, multi-day holds, cleaner trends |
+| 1d | 8 | 14 | 1.5 | 1.3 to 1.7 | Long-term trends, minimal noise, institutional participation |
 
 ### Settings by Trading Style
 
@@ -268,10 +276,9 @@ Configure different sounds for bullish vs bearish alerts to quickly identify tre
 4. Name it "Volumatic_VIDYA"
 5. Paste the code and click **OK**
 6. Apply to chart
-
 ```
 # Volumatic VIDYA
-# Converted from Pine Script to ThinkOrSwim thinkScript
+# Last updated by NinjaSchoolProfessor.com on 1-Dec-2022, 3:17PM EDT
 
 declare upper;
 
@@ -281,13 +288,13 @@ input timeFrame = {default "5m", "1m", "15m", "1h", "4h", "1d"};
 
 # Core Parameters
 input vidyaLength = 10;
-#hint vidyaLength: VIDYA smoothing period. \nHigher = smoother, slower.\n Lower = responsive, noisier. \n--------------------\nBy Timeframe:\n 1m = 12\n 5m = 10 (default)\n 15m = 10 \n1h = 10\n 4h = 8\n 1d = 8 \n--------------------\n By Style: Aggressive = 8\n Balanced = 10\n Conservative = 12\n\n
+#hint vidyaLength: VIDYA smoothing period. \nHigher = smoother, slower.\n Lower = responsive, noisier. \n--------------------\nBy Timeframe:\n 1m = 12\n 5m = 10 (default)\n 15m = 10 \n1h = 10\n 4h = 8\n 1d = 8 \n--------------------\n By Style:\n Aggressive = 8\n Balanced = 10\n Conservative = 12\n\n
 
 input vidyaMomentum = 20;
-#hint vidyaMomentum: CMO lookback period. \nHigher = stable, less adaptive. \nLower = fast, sensitive.\n--------------------\nBy Timeframe:\n 1m = 28\n 5m = 20 (default)\n 15m = 18\n 1h = 16\n 4h = 14\n 1d = 14\n--------------------\n By Style: Aggressive = 16\n Balanced = 20\n Conservative = 25
+#hint vidyaMomentum: CMO lookback period. \nHigher = stable, less adaptive. \nLower = fast, sensitive.\n--------------------\nBy Timeframe:\n 1m = 28\n 5m = 20 (default)\n 15m = 18\n 1h = 16\n 4h = 14\n 1d = 14\n--------------------\n By Style:\n Aggressive = 16\n Balanced = 20\n Conservative = 25
 
 input atrMult = 2.4;
-#hint atrMult: ATR multiplier for bands. PRIMARY TUNING KNOB.\nHigher = wider bands, fewer signals. \nLower = tighter bands, more signals.\n\nBy Timeframe: 1m = 2.8, \n5m = 2.4 (default)\n 15m = 2.0\n 1h = 1.7\n 4h = 1.6\n 1d = 1.5\n--------------------\n By Style: Aggressive = 2.0\n Balanced = 2.2\n Conservative = 2.8
+#hint atrMult: ATR multiplier for bands. PRIMARY TUNING KNOB.\nHigher = wider bands, fewer signals. \nLower = tighter bands, more signals.\n\nBy Timeframe: 1m = 2.8, \n5m = 2.4 (default)\n 15m = 2.0\n 1h = 1.7\n 4h = 1.6\n 1d = 1.5\n--------------------\n By Style:\n Aggressive = 2.0\n Balanced = 2.2\n Conservative = 2.8
 
 input atrLength = 14;
 #hint atrLength: ATR calculation period. Default 14 works for most cases.
